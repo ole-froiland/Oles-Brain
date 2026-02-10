@@ -1,4 +1,4 @@
-const CSV_HEADER = "Dato,Oppvaskmaskin tømt,Kreatin tatt,Seng redd,Kommentar";
+const CSV_HEADER = "Dato,Oppvaskmaskin tømt,Kreatin tatt,Omega-3 tatt,Seng redd,Kommentar";
 
 function isValidDateString(value) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -14,12 +14,14 @@ function isZeroOrOne(value) {
 }
 
 function normalizePayload(payload) {
-  const { date, dishwasher, creatine, bed, note } = payload || {};
+  const { date, dishwasher, creatine, omega3, bed, note } = payload || {};
+  const omega3Value = omega3 === undefined ? 0 : omega3;
 
   if (
     !isValidDateString(date) ||
     !isZeroOrOne(dishwasher) ||
     !isZeroOrOne(creatine) ||
+    !isZeroOrOne(omega3Value) ||
     !isZeroOrOne(bed)
   ) {
     return { error: "Ugyldig payload" };
@@ -34,6 +36,7 @@ function normalizePayload(payload) {
       date,
       dishwasher,
       creatine,
+      omega3: omega3Value,
       bed,
       note: typeof note === "string" ? note : ""
     }
@@ -83,6 +86,7 @@ function toCsv(entries) {
         escapeCsvValue(entry.date),
         escapeCsvValue(entry.dishwasher),
         escapeCsvValue(entry.creatine),
+        escapeCsvValue(entry.omega3 ?? 0),
         escapeCsvValue(entry.bed),
         escapeCsvValue(entry.note)
       ].join(",")

@@ -96,6 +96,10 @@
         animation-delay: 240ms;
       }
 
+      .item:nth-of-type(4) {
+        animation-delay: 300ms;
+      }
+
       input[type="checkbox"] {
         width: 18px;
         height: 18px;
@@ -185,6 +189,11 @@
           <input id="bed" type="checkbox" />
           Seng
         </label>
+
+        <label class="item">
+          <input id="omega3" type="checkbox" />
+          Omega-3
+        </label>
       </section>
 
       <div class="actions">
@@ -212,6 +221,7 @@
           date: formatDateToday(),
           dishwasher: document.getElementById("dishwasher").checked ? 1 : 0,
           creatine: document.getElementById("creatine").checked ? 1 : 0,
+          omega3: document.getElementById("omega3").checked ? 1 : 0,
           bed: document.getElementById("bed").checked ? 1 : 0
         };
 

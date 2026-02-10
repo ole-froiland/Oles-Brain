@@ -60,6 +60,7 @@ Google Sheets:
   "date": "YYYY-MM-DD",
   "dishwasher": 0,
   "creatine": 1,
+  "omega3": 1,
   "bed": 0,
   "note": "valgfri kommentar"
 }

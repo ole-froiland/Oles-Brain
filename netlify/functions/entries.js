@@ -42,6 +42,7 @@ exports.handler = async (event) => {
       date: normalized.value.date,
       dishwasher: normalized.value.dishwasher,
       creatine: normalized.value.creatine,
+      omega3: normalized.value.omega3,
       bed: normalized.value.bed,
       note: normalized.value.note,
       created_at: createdAt
@@ -55,6 +56,7 @@ exports.handler = async (event) => {
       date: entry.date,
       dishwasher: entry.dishwasher,
       creatine: entry.creatine,
+      omega3: entry.omega3,
       bed: entry.bed,
       note: entry.note || null
     });

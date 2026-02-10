@@ -20,6 +20,7 @@ db.serialize(() => {
       date TEXT NOT NULL,
       dishwasher INTEGER NOT NULL CHECK (dishwasher IN (0, 1)),
       creatine INTEGER NOT NULL CHECK (creatine IN (0, 1)),
+      omega3 INTEGER NOT NULL CHECK (omega3 IN (0, 1)),
       bed INTEGER NOT NULL CHECK (bed IN (0, 1)),
       note TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -30,6 +31,12 @@ db.serialize(() => {
   db.run("ALTER TABLE entries ADD COLUMN note TEXT", (err) => {
     if (err && !/duplicate column name: note/.test(err.message)) {
       console.error("Kunne ikke migrere entries.note:", err.message);
+    }
+  });
+
+  db.run("ALTER TABLE entries ADD COLUMN omega3 INTEGER NOT NULL DEFAULT 0", (err) => {
+    if (err && !/duplicate column name: omega3/.test(err.message)) {
+      console.error("Kunne ikke migrere entries.omega3:", err.message);
     }
   });
 });
@@ -65,12 +72,14 @@ function escapeCsvValue(value) {
 }
 
 app.post("/entries", (req, res) => {
-  const { date, dishwasher, creatine, bed, note } = req.body || {};
+  const { date, dishwasher, creatine, omega3, bed, note } = req.body || {};
+  const omega3Value = omega3 === undefined ? 0 : omega3;
 
   if (
     !isValidDateString(date) ||
     !isZeroOrOne(dishwasher) ||
     !isZeroOrOne(creatine) ||
+    !isZeroOrOne(omega3Value) ||
     !isZeroOrOne(bed) ||
     !isValidNote(note)
   ) {
@@ -81,8 +90,8 @@ app.post("/entries", (req, res) => {
   const noteValue = typeof note === "string" && note.trim() !== "" ? note : null;
 
   db.run(
-    "INSERT INTO entries (date, dishwasher, creatine, bed, note) VALUES (?, ?, ?, ?, ?)",
-    [date, dishwasher, creatine, bed, noteValue],
+    "INSERT INTO entries (date, dishwasher, creatine, omega3, bed, note) VALUES (?, ?, ?, ?, ?, ?)",
+    [date, dishwasher, creatine, omega3Value, bed, noteValue],
     function onInsert(err) {
       if (err) {
         res.status(500).json({ error: "Kunne ikke lagre" });
@@ -94,6 +103,7 @@ app.post("/entries", (req, res) => {
         date,
         dishwasher,
         creatine,
+        omega3: omega3Value,
         bed,
         note: noteValue
       });
@@ -116,7 +126,7 @@ app.get("/entries.csv", (req, res) => {
   res.setHeader("Surrogate-Control", "no-store");
 
   db.all(
-    "SELECT id, date, dishwasher, creatine, bed, COALESCE(note, '') AS note FROM entries ORDER BY date ASC, id ASC",
+    "SELECT id, date, dishwasher, creatine, COALESCE(omega3, 0) AS omega3, bed, COALESCE(note, '') AS note FROM entries ORDER BY date ASC, id ASC",
     (err, rows) => {
       if (err) {
         res.status(500).type("text/plain; charset=utf-8").send("Kunne ikke hente CSV");
@@ -124,12 +134,13 @@ app.get("/entries.csv", (req, res) => {
       }
 
       const lines = [
-        "Dato,Oppvaskmaskin tømt,Kreatin tatt,Seng redd,Kommentar",
+        "Dato,Oppvaskmaskin tømt,Kreatin tatt,Omega-3 tatt,Seng redd,Kommentar",
         ...rows.map((row) =>
           [
             escapeCsvValue(row.date),
             escapeCsvValue(row.dishwasher),
             escapeCsvValue(row.creatine),
+            escapeCsvValue(row.omega3),
             escapeCsvValue(row.bed),
             escapeCsvValue(row.note)
           ].join(",")
