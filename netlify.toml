@@ -1,0 +1,15 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/entries"
+  to = "/.netlify/functions/entries"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/entries.csv"
+  to = "/.netlify/functions/entries-csv"
+  status = 200
+  force = true

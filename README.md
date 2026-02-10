@@ -1,31 +1,59 @@
 # Oles-Brain
 
-Minimumsløsning med frontend + backend:
+En enkel tracker med:
 
-- Frontend: én side med checkbokser for Oppvaskmaskin, Kreatin og Seng + knapp `Lagre`
-- Backend: `POST /entries` + `GET /entries.csv?key=...`
-- Database: SQLite (`data/entries.db`) med tabell `entries`
+- frontend i `public/index.html`
+- lokal backend i `server.js` (Express + SQLite)
+- Netlify backend i `netlify/functions` (lagrer i Netlify Blobs)
 
-## Kjør
+## Lokal bruk (dev/test)
+
+Start:
 
 ```bash
 npm install
 npm start
 ```
 
-Åpne `http://localhost:3000`.
+Bruk app:
 
-For CSV-endepunkt med nøkkel:
+- `http://localhost:3000/`
+
+Hent CSV:
+
+- `http://localhost:3000/entries.csv?key=DIN_KEY`
+
+Stopp:
 
 ```bash
-CSV_KEY=din-hemmelige-nokkel npm start
+kill $(lsof -ti tcp:3000) 2>/dev/null || true
+```
+
+## Netlify bruk (prod)
+
+Deploy repoet til Netlify (publish: `public`, functions: `netlify/functions`).
+
+Sett env var i Netlify:
+
+- `CSV_KEY=DIN_KEY` (eller din egen nøkkel)
+
+Bruk app i prod:
+
+- `https://oles-brain.netlify.app/`
+
+Hent CSV i prod:
+
+- `https://oles-brain.netlify.app/entries.csv?key=DIN_KEY`
+
+Google Sheets:
+
+```gs
+=IMPORTDATA("https://oles-brain.netlify.app/entries.csv?key=DIN_KEY")
 ```
 
 ## Endepunkter
 
 `POST /entries`
-
-JSON body:
 
 ```json
 {
@@ -38,7 +66,3 @@ JSON body:
 ```
 
 `GET /entries.csv?key=DIN_KEY`
-
-Returnerer CSV med kolonner:
-
-`Dato,Oppvaskmaskin tømt,Kreatin tatt,Seng redd,Kommentar`
