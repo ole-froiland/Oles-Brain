@@ -1,0 +1,25 @@
+{
+  "name": "oles-brain",
+  "version": "1.0.0",
+  "description": "En enkel Node.js-server som serverer en side med teksten `oles brain`.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ole-froiland/Oles-Brain.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ole-froiland/Oles-Brain/issues"
+  },
+  "homepage": "https://github.com/ole-froiland/Oles-Brain#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "sqlite3": "^5.1.7"
+  }
+}

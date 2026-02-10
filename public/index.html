@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Oles Brain</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,800&family=Work+Sans:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-top: #f8f2e8;
+        --bg-bottom: #e8f0e5;
+        --card: #fffdf9;
+        --text: #1f2b1f;
+        --muted: #5d6b5f;
+        --accent: #2d7f56;
+        --accent-pressed: #246545;
+        --error: #a73d32;
+        --border: #d7dfd5;
+        --shadow: 0 18px 42px rgba(34, 53, 40, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 24px;
+        display: grid;
+        place-items: center;
+        font-family: "Work Sans", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.8), transparent 38%),
+          radial-gradient(circle at 85% 85%, rgba(194, 221, 198, 0.58), transparent 45%),
+          linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+      }
+
+      .card {
+        width: min(460px, 100%);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        animation: card-enter 380ms ease-out both;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: "Fraunces", serif;
+        font-size: clamp(2rem, 5vw, 2.7rem);
+        line-height: 1;
+      }
+
+      .subtitle {
+        margin: 8px 0 20px;
+        color: var(--muted);
+      }
+
+      .checklist {
+        display: grid;
+        gap: 10px;
+      }
+
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #ffffff;
+        cursor: pointer;
+        user-select: none;
+        transform: translateY(10px);
+        opacity: 0;
+        animation: item-enter 320ms ease-out forwards;
+      }
+
+      .item:nth-of-type(1) {
+        animation-delay: 120ms;
+      }
+
+      .item:nth-of-type(2) {
+        animation-delay: 180ms;
+      }
+
+      .item:nth-of-type(3) {
+        animation-delay: 240ms;
+      }
+
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        accent-color: var(--accent);
+      }
+
+      .actions {
+        margin-top: 16px;
+      }
+
+      button {
+        width: 100%;
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font: inherit;
+        font-weight: 700;
+        color: #ffffff;
+        background: var(--accent);
+        cursor: pointer;
+        transition: transform 80ms ease, background-color 140ms ease;
+      }
+
+      button:hover {
+        background: var(--accent-pressed);
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .status {
+        min-height: 1.3em;
+        margin: 10px 0 0;
+        font-size: 0.95rem;
+      }
+
+      .status.success {
+        color: var(--accent);
+      }
+
+      .status.error {
+        color: var(--error);
+      }
+
+      .status.pending {
+        color: var(--muted);
+      }
+
+      @keyframes card-enter {
+        from {
+          transform: translateY(8px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes item-enter {
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>oles brain</h1>
+      <p class="subtitle">Dagens sjekk</p>
+
+      <section class="checklist">
+        <label class="item">
+          <input id="dishwasher" type="checkbox" />
+          Oppvaskmaskin
+        </label>
+
+        <label class="item">
+          <input id="creatine" type="checkbox" />
+          Kreatin
+        </label>
+
+        <label class="item">
+          <input id="bed" type="checkbox" />
+          Seng
+        </label>
+      </section>
+
+      <div class="actions">
+        <button id="saveButton" type="button">Lagre</button>
+      </div>
+
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </main>
+
+    <script>
+      function formatDateToday() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function setStatus(message, type) {
+        const status = document.getElementById("status");
+        status.textContent = message;
+        status.className = `status ${type || ""}`.trim();
+      }
+
+      async function saveEntry() {
+        setStatus("Lagrer...", "pending");
+
+        const payload = {
+          date: formatDateToday(),
+          dishwasher: document.getElementById("dishwasher").checked ? 1 : 0,
+          creatine: document.getElementById("creatine").checked ? 1 : 0,
+          bed: document.getElementById("bed").checked ? 1 : 0
+        };
+
+        try {
+          const response = await fetch("/entries", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}));
+            setStatus(errorBody.error || "Kunne ikke lagre", "error");
+            return;
+          }
+
+          setStatus("Lagret", "success");
+        } catch (error) {
+          setStatus("Nettverksfeil", "error");
+        }
+      }
+
+      document.getElementById("saveButton").addEventListener("click", saveEntry);
+    </script>
+  </body>
+</html>
