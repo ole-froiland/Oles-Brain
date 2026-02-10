@@ -36,6 +36,7 @@ Deploy repoet til Netlify (publish: `public`, functions: `netlify/functions`).
 Sett env var i Netlify:
 
 - `CSV_KEY=DIN_KEY` (eller din egen nøkkel)
+- `RESET_KEY=DIN_KEY` (eller egen nøkkel for reset)
 
 Bruk app i prod:
 
@@ -67,3 +68,5 @@ Google Sheets:
 ```
 
 `GET /entries.csv?key=DIN_KEY`
+
+`POST /entries/reset?key=DIN_KEY` nullstiller alle lagrede entries.

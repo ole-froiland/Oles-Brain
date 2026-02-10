@@ -9,6 +9,12 @@
   force = true
 
 [[redirects]]
+  from = "/entries/reset"
+  to = "/.netlify/functions/entries-reset"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/entries.csv"
   to = "/.netlify/functions/entries-csv"
   status = 200

@@ -6,6 +6,7 @@ const sqlite3 = require("sqlite3").verbose();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const CSV_KEY = process.env.CSV_KEY || "DIN_KEY";
+const RESET_KEY = process.env.RESET_KEY || CSV_KEY;
 
 const dataDir = path.join(__dirname, "data");
 const dbPath = path.join(dataDir, "entries.db");
@@ -109,6 +110,24 @@ app.post("/entries", (req, res) => {
       });
     }
   );
+});
+
+app.post("/entries/reset", (req, res) => {
+  const key = req.query.key;
+
+  if (key !== RESET_KEY) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  db.run("DELETE FROM entries", function onDelete(err) {
+    if (err) {
+      res.status(500).json({ error: "Kunne ikke nullstille" });
+      return;
+    }
+
+    res.status(200).json({ ok: true, deleted: this.changes || 0 });
+  });
 });
 
 app.get("/entries.csv", (req, res) => {
