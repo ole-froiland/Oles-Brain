@@ -6,12 +6,23 @@ const STORE_NAME = "oles-brain";
 const ENTRIES_KEY = "entries";
 const localDbPath = path.join(process.cwd(), "data", "netlify-entries.json");
 
-function hasBlobsContext() {
+function hasBlobsContext(event) {
+  try {
+    connectLambda(event);
+  } catch (_) {
+    // Ignore: connectLambda is only needed in Lambda compatibility mode.
+  }
+
   return Boolean(process.env.NETLIFY_BLOBS_CONTEXT || globalThis.netlifyBlobsContext);
 }
 
 function getBlobStore(event) {
-  connectLambda(event);
+  try {
+    connectLambda(event);
+  } catch (_) {
+    // Ignore: connectLambda is only needed in Lambda compatibility mode.
+  }
+
   return getStore(STORE_NAME);
 }
 
@@ -35,7 +46,7 @@ async function writeEntriesToFile(entries) {
 }
 
 async function readEntries(event) {
-  if (hasBlobsContext()) {
+  if (hasBlobsContext(event)) {
     const store = getBlobStore(event);
     const entries = await store.get(ENTRIES_KEY, { type: "json" });
     return Array.isArray(entries) ? entries : [];
@@ -45,10 +56,14 @@ async function readEntries(event) {
 }
 
 async function writeEntries(event, entries) {
-  if (hasBlobsContext()) {
+  if (hasBlobsContext(event)) {
     const store = getBlobStore(event);
     await store.setJSON(ENTRIES_KEY, entries);
     return;
+  }
+
+  if (process.env.NETLIFY === "true") {
+    throw new Error("Netlify Blobs context mangler. Aktiver Blobs for siten i Netlify.");
   }
 
   await writeEntriesToFile(entries);
