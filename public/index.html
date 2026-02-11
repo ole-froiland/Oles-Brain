@@ -118,6 +118,21 @@
         animation: item-enter 320ms ease-out forwards;
       }
 
+      .item.completed {
+        opacity: 0.62;
+        transform: scale(0.98);
+        font-size: 0.95rem;
+        background: #f7faf7;
+      }
+
+      .item.completed::after {
+        content: "✔";
+        margin-left: auto;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
       .item:nth-of-type(1) {
         animation-delay: 120ms;
       }
@@ -164,6 +179,12 @@
 
       .save-button:active {
         transform: translateY(1px);
+      }
+
+      .save-button:disabled {
+        background: #8ea99a;
+        cursor: not-allowed;
+        transform: none;
       }
 
       .status {
@@ -300,16 +321,16 @@
           const done = selectedDone[task] === 1;
 
           if (item) {
-            item.classList.toggle("hidden", done);
+            item.classList.toggle("completed", done);
           }
 
           if (checkbox) {
-            checkbox.checked = false;
+            checkbox.checked = done;
             checkbox.disabled = done;
           }
         });
 
-        saveButton.classList.toggle("hidden", doneEverything);
+        saveButton.disabled = doneEverything;
         completeMessage.classList.toggle("hidden", !doneEverything);
 
         if (doneEverything) {
