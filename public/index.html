@@ -150,6 +150,16 @@
         color: var(--muted);
       }
 
+      .complete {
+        margin: 14px 0 0;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .hidden {
+        display: none;
+      }
+
       @keyframes card-enter {
         from {
           transform: translateY(8px);
@@ -175,22 +185,22 @@
       <p class="subtitle">Dagens sjekk</p>
 
       <section class="checklist">
-        <label class="item">
+        <label class="item" data-task="dishwasher">
           <input id="dishwasher" type="checkbox" />
           Oppvaskmaskin
         </label>
 
-        <label class="item">
+        <label class="item" data-task="creatine">
           <input id="creatine" type="checkbox" />
           Kreatin
         </label>
 
-        <label class="item">
+        <label class="item" data-task="bed">
           <input id="bed" type="checkbox" />
           Seng
         </label>
 
-        <label class="item">
+        <label class="item" data-task="omega3">
           <input id="omega3" type="checkbox" />
           Omega-3
         </label>
@@ -201,9 +211,18 @@
       </div>
 
       <p id="status" class="status" role="status" aria-live="polite"></p>
+      <p id="completeMessage" class="complete hidden">Alle oppgaver gjort 🙂</p>
     </main>
 
     <script>
+      const TASKS = ["dishwasher", "creatine", "omega3", "bed"];
+      let todayDone = {
+        dishwasher: 0,
+        creatine: 0,
+        omega3: 0,
+        bed: 0
+      };
+
       function formatDateToday() {
         return new Date().toISOString().slice(0, 10);
       }
@@ -214,16 +233,85 @@
         status.className = `status ${type || ""}`.trim();
       }
 
+      function allDone(doneState) {
+        return TASKS.every((task) => doneState[task] === 1);
+      }
+
+      function applyTodayState() {
+        const doneEverything = allDone(todayDone);
+        const saveButton = document.getElementById("saveButton");
+        const completeMessage = document.getElementById("completeMessage");
+
+        TASKS.forEach((task) => {
+          const item = document.querySelector(`[data-task="${task}"]`);
+          const checkbox = document.getElementById(task);
+          const done = todayDone[task] === 1;
+
+          if (item) {
+            item.classList.toggle("hidden", done);
+          }
+
+          if (checkbox) {
+            checkbox.checked = false;
+            checkbox.disabled = done;
+          }
+        });
+
+        saveButton.classList.toggle("hidden", doneEverything);
+        completeMessage.classList.toggle("hidden", !doneEverything);
+
+        if (doneEverything) {
+          setStatus("Alle dagens oppgaver er ferdige.", "success");
+        }
+      }
+
+      async function loadTodayState() {
+        try {
+          const response = await fetch(`/entries/today?date=${formatDateToday()}`);
+          if (!response.ok) {
+            return;
+          }
+
+          const body = await response.json();
+          todayDone = {
+            dishwasher: body.dishwasher === 1 ? 1 : 0,
+            creatine: body.creatine === 1 ? 1 : 0,
+            omega3: body.omega3 === 1 ? 1 : 0,
+            bed: body.bed === 1 ? 1 : 0
+          };
+          applyTodayState();
+        } catch (_) {
+          // Keep default empty state if status lookup fails.
+        }
+      }
+
       async function saveEntry() {
+        if (allDone(todayDone)) {
+          applyTodayState();
+          return;
+        }
+
         setStatus("Lagrer...", "pending");
 
         const payload = {
           date: formatDateToday(),
-          dishwasher: document.getElementById("dishwasher").checked ? 1 : 0,
-          creatine: document.getElementById("creatine").checked ? 1 : 0,
-          omega3: document.getElementById("omega3").checked ? 1 : 0,
-          bed: document.getElementById("bed").checked ? 1 : 0
+          dishwasher:
+            todayDone.dishwasher === 1 || document.getElementById("dishwasher").checked ? 1 : 0,
+          creatine: todayDone.creatine === 1 || document.getElementById("creatine").checked ? 1 : 0,
+          omega3: todayDone.omega3 === 1 || document.getElementById("omega3").checked ? 1 : 0,
+          bed: todayDone.bed === 1 || document.getElementById("bed").checked ? 1 : 0
         };
+
+        const changedAnything =
+          payload.dishwasher !== todayDone.dishwasher ||
+          payload.creatine !== todayDone.creatine ||
+          payload.omega3 !== todayDone.omega3 ||
+          payload.bed !== todayDone.bed;
+
+        if (!changedAnything) {
+          setStatus("Huk av minst én oppgave.", "error");
+          return;
+        }
 
         try {
           const response = await fetch("/entries", {
@@ -238,6 +326,15 @@
             return;
           }
 
+          const body = await response.json().catch(() => payload);
+          todayDone = {
+            dishwasher: body.dishwasher === 1 ? 1 : payload.dishwasher,
+            creatine: body.creatine === 1 ? 1 : payload.creatine,
+            omega3: body.omega3 === 1 ? 1 : payload.omega3,
+            bed: body.bed === 1 ? 1 : payload.bed
+          };
+
+          applyTodayState();
           setStatus("Lagret", "success");
         } catch (error) {
           setStatus("Nettverksfeil", "error");
@@ -245,6 +342,7 @@
       }
 
       document.getElementById("saveButton").addEventListener("click", saveEntry);
+      loadTodayState();
     </script>
   </body>
 </html>

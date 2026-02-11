@@ -9,6 +9,12 @@
   force = true
 
 [[redirects]]
+  from = "/entries/today"
+  to = "/.netlify/functions/entries-today"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/entries/reset"
   to = "/.netlify/functions/entries-reset"
   status = 200

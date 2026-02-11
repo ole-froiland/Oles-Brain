@@ -62,6 +62,10 @@ function isValidNote(value) {
   return value === undefined || value === null || typeof value === "string";
 }
 
+function todayDateString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function escapeCsvValue(value) {
   const stringValue = value === undefined || value === null ? "" : String(value);
 
@@ -107,6 +111,51 @@ app.post("/entries", (req, res) => {
         omega3: omega3Value,
         bed,
         note: noteValue
+      });
+    }
+  );
+});
+
+app.get("/entries/today", (req, res) => {
+  const date = req.query.date || todayDateString();
+
+  if (!isValidDateString(date)) {
+    res.status(400).json({ error: "Ugyldig dato" });
+    return;
+  }
+
+  db.get(
+    `
+      SELECT
+        COALESCE(MAX(dishwasher), 0) AS dishwasher,
+        COALESCE(MAX(creatine), 0) AS creatine,
+        COALESCE(MAX(omega3), 0) AS omega3,
+        COALESCE(MAX(bed), 0) AS bed
+      FROM entries
+      WHERE date = ?
+    `,
+    [date],
+    (err, row) => {
+      if (err) {
+        res.status(500).json({ error: "Kunne ikke hente dagens status" });
+        return;
+      }
+
+      const status = {
+        date,
+        dishwasher: row && row.dishwasher === 1 ? 1 : 0,
+        creatine: row && row.creatine === 1 ? 1 : 0,
+        omega3: row && row.omega3 === 1 ? 1 : 0,
+        bed: row && row.bed === 1 ? 1 : 0
+      };
+
+      res.status(200).json({
+        ...status,
+        all_done:
+          status.dishwasher === 1 &&
+          status.creatine === 1 &&
+          status.omega3 === 1 &&
+          status.bed === 1
       });
     }
   );

@@ -13,6 +13,10 @@ function isZeroOrOne(value) {
   return value === 0 || value === 1;
 }
 
+function todayDateString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function normalizePayload(payload) {
   const { date, dishwasher, creatine, omega3, bed, note } = payload || {};
   const omega3Value = omega3 === undefined ? 0 : omega3;
@@ -40,6 +44,35 @@ function normalizePayload(payload) {
       bed,
       note: typeof note === "string" ? note : ""
     }
+  };
+}
+
+function dailyStatus(entries, date = todayDateString()) {
+  const relevant = entries.filter((entry) => entry.date === date);
+
+  const status = relevant.reduce(
+    (acc, entry) => ({
+      dishwasher: acc.dishwasher === 1 || entry.dishwasher === 1 ? 1 : 0,
+      creatine: acc.creatine === 1 || entry.creatine === 1 ? 1 : 0,
+      omega3: acc.omega3 === 1 || (entry.omega3 ?? 0) === 1 ? 1 : 0,
+      bed: acc.bed === 1 || entry.bed === 1 ? 1 : 0
+    }),
+    {
+      dishwasher: 0,
+      creatine: 0,
+      omega3: 0,
+      bed: 0
+    }
+  );
+
+  return {
+    date,
+    ...status,
+    all_done:
+      status.dishwasher === 1 &&
+      status.creatine === 1 &&
+      status.omega3 === 1 &&
+      status.bed === 1
   };
 }
 
@@ -97,8 +130,11 @@ function toCsv(entries) {
 }
 
 module.exports = {
+  dailyStatus,
   formatCreatedAt,
   getNextId,
+  isValidDateString,
   normalizePayload,
+  todayDateString,
   toCsv
 };

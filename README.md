@@ -70,3 +70,5 @@ Google Sheets:
 `GET /entries.csv?key=DIN_KEY`
 
 `POST /entries/reset?key=DIN_KEY` nullstiller alle lagrede entries.
+
+`GET /entries/today?date=YYYY-MM-DD` returnerer dagens status (for å skjule ferdige oppgaver i UI).
