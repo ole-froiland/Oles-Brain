@@ -60,60 +60,33 @@
       }
 
       .subtitle {
-        margin: 8px 0 18px;
+        margin: 8px 0 20px;
         color: var(--muted);
       }
 
-      .top-nav {
+      .panel-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0;
-        margin-bottom: 22px;
+        gap: 14px;
+      }
+
+      .panel {
+        min-height: clamp(420px, 58vh, 640px);
+        padding: 16px;
         border: 1px solid var(--border);
         border-radius: 14px;
-        overflow: hidden;
-      }
-
-      .menu-button {
-        width: 100%;
-        border: 0;
-        border-right: 1px solid var(--border);
-        border-radius: 0;
-        min-height: clamp(96px, 22vh, 180px);
-        padding: 12px;
-        font: inherit;
-        font-weight: 600;
-        font-size: clamp(1rem, 1.6vw, 1.35rem);
-        color: var(--text);
         background: #ffffff;
-        cursor: pointer;
-        transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
       }
 
-      .menu-button:last-child {
-        border-right: 0;
-      }
-
-      .menu-button.active {
-        color: #ffffff;
-        background: var(--accent);
-        border-color: var(--accent);
-      }
-
-      .view {
-        display: none;
-        max-width: 560px;
-        margin: 0 auto;
-      }
-
-      .view.active {
-        display: block;
-        animation: view-enter 160ms ease-out both;
+      .panel-title {
+        margin: 0 0 12px;
+        font-family: "Fraunces", serif;
+        font-size: clamp(1.2rem, 1.8vw, 1.65rem);
       }
 
       .dashboard-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
         gap: 10px;
         margin-bottom: 12px;
       }
@@ -168,7 +141,7 @@
       .checklist {
         display: grid;
         gap: 10px;
-        margin-top: 14px;
+        margin-top: 10px;
       }
 
       .item {
@@ -311,83 +284,85 @@
           transform: translateY(0);
         }
       }
+
+      @media (max-width: 1100px) {
+        .panel-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .panel {
+          min-height: auto;
+        }
+      }
     </style>
   </head>
   <body>
     <main class="card">
       <h1>oles brain</h1>
-      <p class="subtitle">Bytt mellom menyene under</p>
+      <p class="subtitle">Tre store bokser som alltid er åpne</p>
 
-      <nav class="top-nav" aria-label="Hovedmeny">
-        <button class="menu-button active" data-view="dashboard" type="button" aria-selected="true">
-          Dashboard
-        </button>
-        <button class="menu-button" data-view="rutiner" type="button" aria-selected="false">
-          Rutiner
-        </button>
-        <button class="menu-button" data-view="kalender" type="button" aria-selected="false">
-          Kalender
-        </button>
-      </nav>
-
-      <section id="view-dashboard" class="view active">
-        <div class="dashboard-grid">
-          <article class="dash-card">
-            <p class="dash-label">Valgt dato</p>
-            <p id="dashboardDate" class="dash-value"></p>
-          </article>
-          <article class="dash-card">
-            <p class="dash-label">Fullført</p>
-            <p id="dashboardProgress" class="dash-value"></p>
-          </article>
-        </div>
-        <p id="dashboardHint" class="date-label"></p>
-      </section>
-
-      <section id="view-rutiner" class="view">
-        <p id="dateLabel" class="date-label"></p>
-
-        <section class="checklist">
-          <label class="item" data-task="dishwasher">
-            <input id="dishwasher" type="checkbox" />
-            Oppvaskmaskin
-          </label>
-
-          <label class="item" data-task="creatine">
-            <input id="creatine" type="checkbox" />
-            Kreatin
-          </label>
-
-          <label class="item" data-task="bed">
-            <input id="bed" type="checkbox" />
-            Seng
-          </label>
-
-          <label class="item" data-task="omega3">
-            <input id="omega3" type="checkbox" />
-            Omega-3
-          </label>
+      <section class="panel-grid" aria-label="Hovedmeny">
+        <section class="panel">
+          <h2 class="panel-title">Dashboard</h2>
+          <div class="dashboard-grid">
+            <article class="dash-card">
+              <p class="dash-label">Valgt dato</p>
+              <p id="dashboardDate" class="dash-value"></p>
+            </article>
+            <article class="dash-card">
+              <p class="dash-label">Fullført</p>
+              <p id="dashboardProgress" class="dash-value"></p>
+            </article>
+          </div>
+          <p id="dashboardHint" class="date-label"></p>
         </section>
 
-        <div class="actions">
-          <button id="saveButton" class="save-button" type="button">Lagre</button>
-        </div>
+        <section class="panel">
+          <h2 class="panel-title">Rutiner</h2>
+          <p id="dateLabel" class="date-label"></p>
 
-        <p id="status" class="status" role="status" aria-live="polite"></p>
-        <p id="completeMessage" class="complete hidden">Alle oppgaver gjort 🙂</p>
-      </section>
+          <section class="checklist">
+            <label class="item" data-task="dishwasher">
+              <input id="dishwasher" type="checkbox" />
+              Oppvaskmaskin
+            </label>
 
-      <section id="view-kalender" class="view">
-        <label class="date-input-label" for="datePicker">Velg dato</label>
-        <input id="datePicker" class="date-picker" type="date" />
-        <p id="calendarDateLabel" class="date-label"></p>
-        <p class="calendar-help">Bytt dato her for å hente og oppdatere rutiner for den dagen.</p>
+            <label class="item" data-task="creatine">
+              <input id="creatine" type="checkbox" />
+              Kreatin
+            </label>
+
+            <label class="item" data-task="bed">
+              <input id="bed" type="checkbox" />
+              Seng
+            </label>
+
+            <label class="item" data-task="omega3">
+              <input id="omega3" type="checkbox" />
+              Omega-3
+            </label>
+          </section>
+
+          <div class="actions">
+            <button id="saveButton" class="save-button" type="button">Lagre</button>
+          </div>
+
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+          <p id="completeMessage" class="complete hidden">Alle oppgaver gjort 🙂</p>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">Kalender</h2>
+          <label class="date-input-label" for="datePicker">Velg dato</label>
+          <input id="datePicker" class="date-picker" type="date" />
+          <p id="calendarDateLabel" class="date-label"></p>
+          <p class="calendar-help">Bytt dato her for å hente og oppdatere rutiner for den dagen.</p>
+        </section>
       </section>
     </main>
 
     <script>
       const TASKS = ["dishwasher", "creatine", "omega3", "bed"];
-      const VIEWS = ["dashboard", "rutiner", "kalender"];
       let selectedDate = formatDateToday();
 
       function emptyDoneState() {
@@ -575,39 +550,7 @@
         });
       }
 
-      function setView(viewName) {
-        if (!VIEWS.includes(viewName)) {
-          return;
-        }
-
-        document.querySelectorAll(".menu-button").forEach((button) => {
-          const isActive = button.dataset.view === viewName;
-          button.classList.toggle("active", isActive);
-          button.setAttribute("aria-selected", isActive ? "true" : "false");
-        });
-
-        document.querySelectorAll(".view").forEach((view) => {
-          view.classList.toggle("active", view.id === `view-${viewName}`);
-        });
-
-        if (location.hash !== `#${viewName}`) {
-          history.replaceState(null, "", `#${viewName}`);
-        }
-      }
-
-      function setupMenu() {
-        document.querySelectorAll(".menu-button").forEach((button) => {
-          button.addEventListener("click", () => {
-            setView(button.dataset.view);
-          });
-        });
-
-        const hashView = location.hash.replace("#", "");
-        setView(VIEWS.includes(hashView) ? hashView : "dashboard");
-      }
-
       document.getElementById("saveButton").addEventListener("click", saveEntry);
-      setupMenu();
       setupDateControls();
       loadSelectedDateState();
     </script>
