@@ -106,19 +106,15 @@
         background: var(--theme-button-hover);
       }
 
-      .subtitle {
-        margin: 8px 0 20px;
-        color: var(--muted);
-      }
-
       .panel-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
+        margin-top: 20px;
       }
 
       .panel {
-        min-height: clamp(420px, 58vh, 640px);
+        min-height: clamp(680px, 82vh, 980px);
         padding: 16px;
         border: 1px solid var(--border);
         border-radius: 14px;
@@ -338,7 +334,7 @@
         }
 
         .panel {
-          min-height: auto;
+          min-height: clamp(540px, 68vh, 760px);
         }
       }
     </style>
@@ -351,7 +347,6 @@
           Dark mode
         </button>
       </div>
-      <p class="subtitle">Tre store bokser som alltid er åpne</p>
 
       <section class="panel-grid" aria-label="Hovedmeny">
         <section class="panel">
