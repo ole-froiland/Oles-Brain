@@ -64,6 +64,40 @@
         color: var(--muted);
       }
 
+      .date-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 16px;
+      }
+
+      .calendar-button {
+        width: auto;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font: inherit;
+        font-weight: 600;
+        color: var(--text);
+        background: #ffffff;
+        cursor: pointer;
+      }
+
+      .date-picker {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font: inherit;
+        color: var(--text);
+        background: #ffffff;
+      }
+
+      .date-label {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
       .checklist {
         display: grid;
         gap: 10px;
@@ -111,7 +145,7 @@
         margin-top: 16px;
       }
 
-      button {
+      .save-button {
         width: 100%;
         border: 0;
         border-radius: 12px;
@@ -124,11 +158,11 @@
         transition: transform 80ms ease, background-color 140ms ease;
       }
 
-      button:hover {
+      .save-button:hover {
         background: var(--accent-pressed);
       }
 
-      button:active {
+      .save-button:active {
         transform: translateY(1px);
       }
 
@@ -183,6 +217,11 @@
     <main class="card">
       <h1>oles brain</h1>
       <p class="subtitle">Dagens sjekk</p>
+      <div class="date-row">
+        <button id="calendarToggle" class="calendar-button" type="button">Kalender</button>
+        <input id="datePicker" class="date-picker hidden" type="date" />
+      </div>
+      <p id="dateLabel" class="date-label"></p>
 
       <section class="checklist">
         <label class="item" data-task="dishwasher">
@@ -207,7 +246,7 @@
       </section>
 
       <div class="actions">
-        <button id="saveButton" type="button">Lagre</button>
+        <button id="saveButton" class="save-button" type="button">Lagre</button>
       </div>
 
       <p id="status" class="status" role="status" aria-live="polite"></p>
@@ -216,7 +255,8 @@
 
     <script>
       const TASKS = ["dishwasher", "creatine", "omega3", "bed"];
-      let todayDone = {
+      let selectedDate = formatDateToday();
+      let selectedDone = {
         dishwasher: 0,
         creatine: 0,
         omega3: 0,
@@ -225,6 +265,11 @@
 
       function formatDateToday() {
         return new Date().toISOString().slice(0, 10);
+      }
+
+      function formatDateLabel(dateIso) {
+        const [year, month, day] = dateIso.split("-");
+        return `${day}.${month}.${year}`;
       }
 
       function setStatus(message, type) {
@@ -237,15 +282,22 @@
         return TASKS.every((task) => doneState[task] === 1);
       }
 
-      function applyTodayState() {
-        const doneEverything = allDone(todayDone);
+      function updateDateLabel() {
+        const label = document.getElementById("dateLabel");
+        const today = formatDateToday();
+        const suffix = selectedDate === today ? " (i dag)" : "";
+        label.textContent = `Viser dato: ${formatDateLabel(selectedDate)}${suffix}`;
+      }
+
+      function applySelectedState() {
+        const doneEverything = allDone(selectedDone);
         const saveButton = document.getElementById("saveButton");
         const completeMessage = document.getElementById("completeMessage");
 
         TASKS.forEach((task) => {
           const item = document.querySelector(`[data-task="${task}"]`);
           const checkbox = document.getElementById(task);
-          const done = todayDone[task] === 1;
+          const done = selectedDone[task] === 1;
 
           if (item) {
             item.classList.toggle("hidden", done);
@@ -261,52 +313,55 @@
         completeMessage.classList.toggle("hidden", !doneEverything);
 
         if (doneEverything) {
-          setStatus("Alle dagens oppgaver er ferdige.", "success");
+          setStatus("Alle oppgaver gjort for valgt dato 🙂", "success");
         }
       }
 
-      async function loadTodayState() {
+      async function loadSelectedDateState() {
         try {
-          const response = await fetch(`/entries/today?date=${formatDateToday()}`);
+          const response = await fetch(`/entries/today?date=${encodeURIComponent(selectedDate)}`);
           if (!response.ok) {
             return;
           }
 
           const body = await response.json();
-          todayDone = {
+          selectedDone = {
             dishwasher: body.dishwasher === 1 ? 1 : 0,
             creatine: body.creatine === 1 ? 1 : 0,
             omega3: body.omega3 === 1 ? 1 : 0,
             bed: body.bed === 1 ? 1 : 0
           };
-          applyTodayState();
+
+          updateDateLabel();
+          applySelectedState();
         } catch (_) {
           // Keep default empty state if status lookup fails.
         }
       }
 
       async function saveEntry() {
-        if (allDone(todayDone)) {
-          applyTodayState();
+        if (allDone(selectedDone)) {
+          applySelectedState();
           return;
         }
 
         setStatus("Lagrer...", "pending");
 
         const payload = {
-          date: formatDateToday(),
+          date: selectedDate,
           dishwasher:
-            todayDone.dishwasher === 1 || document.getElementById("dishwasher").checked ? 1 : 0,
-          creatine: todayDone.creatine === 1 || document.getElementById("creatine").checked ? 1 : 0,
-          omega3: todayDone.omega3 === 1 || document.getElementById("omega3").checked ? 1 : 0,
-          bed: todayDone.bed === 1 || document.getElementById("bed").checked ? 1 : 0
+            selectedDone.dishwasher === 1 || document.getElementById("dishwasher").checked ? 1 : 0,
+          creatine:
+            selectedDone.creatine === 1 || document.getElementById("creatine").checked ? 1 : 0,
+          omega3: selectedDone.omega3 === 1 || document.getElementById("omega3").checked ? 1 : 0,
+          bed: selectedDone.bed === 1 || document.getElementById("bed").checked ? 1 : 0
         };
 
         const changedAnything =
-          payload.dishwasher !== todayDone.dishwasher ||
-          payload.creatine !== todayDone.creatine ||
-          payload.omega3 !== todayDone.omega3 ||
-          payload.bed !== todayDone.bed;
+          payload.dishwasher !== selectedDone.dishwasher ||
+          payload.creatine !== selectedDone.creatine ||
+          payload.omega3 !== selectedDone.omega3 ||
+          payload.bed !== selectedDone.bed;
 
         if (!changedAnything) {
           setStatus("Huk av minst én oppgave.", "error");
@@ -327,22 +382,49 @@
           }
 
           const body = await response.json().catch(() => payload);
-          todayDone = {
+          selectedDone = {
             dishwasher: body.dishwasher === 1 ? 1 : payload.dishwasher,
             creatine: body.creatine === 1 ? 1 : payload.creatine,
             omega3: body.omega3 === 1 ? 1 : payload.omega3,
             bed: body.bed === 1 ? 1 : payload.bed
           };
 
-          applyTodayState();
+          applySelectedState();
           setStatus("Lagret", "success");
-        } catch (error) {
+        } catch (_) {
           setStatus("Nettverksfeil", "error");
         }
       }
 
+      function setupDateControls() {
+        const datePicker = document.getElementById("datePicker");
+        const calendarToggle = document.getElementById("calendarToggle");
+
+        datePicker.value = selectedDate;
+        datePicker.max = formatDateToday();
+
+        calendarToggle.addEventListener("click", () => {
+          datePicker.classList.toggle("hidden");
+
+          if (!datePicker.classList.contains("hidden") && datePicker.showPicker) {
+            datePicker.showPicker();
+          }
+        });
+
+        datePicker.addEventListener("change", async () => {
+          if (!datePicker.value) {
+            return;
+          }
+
+          selectedDate = datePicker.value;
+          setStatus("", "");
+          await loadSelectedDateState();
+        });
+      }
+
       document.getElementById("saveButton").addEventListener("click", saveEntry);
-      loadTodayState();
+      setupDateControls();
+      loadSelectedDateState();
     </script>
   </body>
 </html>

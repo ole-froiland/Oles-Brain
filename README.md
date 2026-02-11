@@ -5,6 +5,7 @@ En enkel tracker med:
 - frontend i `public/index.html`
 - lokal backend i `server.js` (Express + SQLite)
 - Netlify backend i `netlify/functions` (lagrer i Netlify Blobs)
+- kalenderknapp for å velge tidligere dato og registrere glemt oppgave
 
 ## Lokal bruk (dev/test)
 
