@@ -15,13 +15,36 @@
         --bg-top: #f8f2e8;
         --bg-bottom: #e8f0e5;
         --card: #fffdf9;
+        --panel: #ffffff;
+        --surface: #ffffff;
+        --surface-soft: #f7faf7;
         --text: #1f2b1f;
         --muted: #5d6b5f;
         --accent: #2d7f56;
         --accent-pressed: #246545;
         --error: #a73d32;
         --border: #d7dfd5;
+        --theme-button-bg: #ffffff;
+        --theme-button-hover: #f3f6f3;
         --shadow: 0 18px 42px rgba(34, 53, 40, 0.14);
+      }
+
+      :root[data-theme="dark"] {
+        --bg-top: #0f1419;
+        --bg-bottom: #121a17;
+        --card: #131b1f;
+        --panel: #172229;
+        --surface: #1f2c34;
+        --surface-soft: #273741;
+        --text: #e8efea;
+        --muted: #9bb1a4;
+        --accent: #44b97a;
+        --accent-pressed: #379b66;
+        --error: #ff8d82;
+        --border: #2d3a32;
+        --theme-button-bg: #1f2c34;
+        --theme-button-hover: #273741;
+        --shadow: 0 20px 44px rgba(0, 0, 0, 0.46);
       }
 
       * {
@@ -40,6 +63,7 @@
           radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.8), transparent 38%),
           radial-gradient(circle at 85% 85%, rgba(194, 221, 198, 0.58), transparent 45%),
           linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        transition: background-color 180ms ease, color 180ms ease;
       }
 
       .card {
@@ -52,11 +76,34 @@
         animation: card-enter 380ms ease-out both;
       }
 
+      .header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
       h1 {
         margin: 0;
         font-family: "Fraunces", serif;
         font-size: clamp(2rem, 5vw, 2.7rem);
         line-height: 1;
+      }
+
+      .theme-button {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font: inherit;
+        font-weight: 600;
+        color: var(--text);
+        background: var(--theme-button-bg);
+        cursor: pointer;
+        transition: background-color 140ms ease, border-color 140ms ease;
+      }
+
+      .theme-button:hover {
+        background: var(--theme-button-hover);
       }
 
       .subtitle {
@@ -75,7 +122,7 @@
         padding: 16px;
         border: 1px solid var(--border);
         border-radius: 14px;
-        background: #ffffff;
+        background: var(--panel);
       }
 
       .panel-title {
@@ -95,7 +142,7 @@
         border: 1px solid var(--border);
         border-radius: 12px;
         padding: 12px;
-        background: #ffffff;
+        background: var(--surface);
       }
 
       .dash-label {
@@ -124,7 +171,7 @@
         padding: 8px 10px;
         font: inherit;
         color: var(--text);
-        background: #ffffff;
+        background: var(--surface);
       }
 
       .date-label {
@@ -151,7 +198,7 @@
         padding: 12px 14px;
         border: 1px solid var(--border);
         border-radius: 12px;
-        background: #ffffff;
+        background: var(--surface);
         cursor: pointer;
         user-select: none;
         transform: translateY(10px);
@@ -163,7 +210,7 @@
         opacity: 0.62;
         transform: scale(0.98);
         font-size: 0.95rem;
-        background: #f7faf7;
+        background: var(--surface-soft);
       }
 
       .item.completed::after {
@@ -298,7 +345,12 @@
   </head>
   <body>
     <main class="card">
-      <h1>oles brain</h1>
+      <div class="header-row">
+        <h1>oles brain</h1>
+        <button id="themeToggle" class="theme-button" type="button" aria-label="Bytt tema">
+          Dark mode
+        </button>
+      </div>
       <p class="subtitle">Tre store bokser som alltid er åpne</p>
 
       <section class="panel-grid" aria-label="Hovedmeny">
@@ -363,6 +415,7 @@
 
     <script>
       const TASKS = ["dishwasher", "creatine", "omega3", "bed"];
+      const THEME_STORAGE_KEY = "oles-brain-theme";
       let selectedDate = formatDateToday();
 
       function emptyDoneState() {
@@ -550,7 +603,36 @@
         });
       }
 
+      function applyTheme(theme) {
+        const root = document.documentElement;
+        const button = document.getElementById("themeToggle");
+        const isDark = theme === "dark";
+
+        root.setAttribute("data-theme", isDark ? "dark" : "light");
+        button.textContent = isDark ? "Light mode" : "Dark mode";
+      }
+
+      function setupThemeToggle() {
+        const button = document.getElementById("themeToggle");
+        const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+        const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        const initialTheme = savedTheme === "dark" || savedTheme === "light" ? savedTheme : preferredTheme;
+
+        applyTheme(initialTheme);
+
+        button.addEventListener("click", () => {
+          const currentTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+          const nextTheme = currentTheme === "dark" ? "light" : "dark";
+
+          applyTheme(nextTheme);
+          localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+        });
+      }
+
       document.getElementById("saveButton").addEventListener("click", saveEntry);
+      setupThemeToggle();
       setupDateControls();
       loadSelectedDateState();
     </script>
