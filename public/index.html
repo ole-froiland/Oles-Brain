@@ -43,7 +43,7 @@
       }
 
       .card {
-        width: min(460px, 100%);
+        width: min(520px, 100%);
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: 18px;
@@ -60,30 +60,80 @@
       }
 
       .subtitle {
-        margin: 8px 0 20px;
+        margin: 8px 0 18px;
         color: var(--muted);
       }
 
-      .date-row {
-        display: flex;
-        align-items: center;
+      .top-nav {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
-        margin: 0 0 16px;
+        margin-bottom: 18px;
       }
 
-      .calendar-button {
-        width: auto;
+      .menu-button {
+        width: 100%;
         border: 1px solid var(--border);
         border-radius: 10px;
-        padding: 8px 10px;
+        padding: 10px 8px;
         font: inherit;
         font-weight: 600;
         color: var(--text);
         background: #ffffff;
         cursor: pointer;
+        transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+      }
+
+      .menu-button.active {
+        color: #ffffff;
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      .view {
+        display: none;
+      }
+
+      .view.active {
+        display: block;
+        animation: view-enter 160ms ease-out both;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .dash-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: #ffffff;
+      }
+
+      .dash-label {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .dash-value {
+        margin: 6px 0 0;
+        font-size: 1.4rem;
+        font-weight: 700;
+      }
+
+      .date-input-label {
+        display: block;
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
       }
 
       .date-picker {
+        width: 100%;
         border: 1px solid var(--border);
         border-radius: 10px;
         padding: 8px 10px;
@@ -98,9 +148,15 @@
         font-size: 0.9rem;
       }
 
+      .calendar-help {
+        margin: 12px 0 0;
+        color: var(--muted);
+      }
+
       .checklist {
         display: grid;
         gap: 10px;
+        margin-top: 14px;
       }
 
       .item {
@@ -232,57 +288,106 @@
           opacity: 1;
         }
       }
+
+      @keyframes view-enter {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
     </style>
   </head>
   <body>
     <main class="card">
       <h1>oles brain</h1>
-      <p class="subtitle">Dagens sjekk</p>
-      <div class="date-row">
-        <button id="calendarToggle" class="calendar-button" type="button">Kalender</button>
-        <input id="datePicker" class="date-picker hidden" type="date" />
-      </div>
-      <p id="dateLabel" class="date-label"></p>
+      <p class="subtitle">Bytt mellom menyene under</p>
 
-      <section class="checklist">
-        <label class="item" data-task="dishwasher">
-          <input id="dishwasher" type="checkbox" />
-          Oppvaskmaskin
-        </label>
+      <nav class="top-nav" aria-label="Hovedmeny">
+        <button class="menu-button active" data-view="dashboard" type="button" aria-selected="true">
+          Dashboard
+        </button>
+        <button class="menu-button" data-view="rutiner" type="button" aria-selected="false">
+          Rutiner
+        </button>
+        <button class="menu-button" data-view="kalender" type="button" aria-selected="false">
+          Kalender
+        </button>
+      </nav>
 
-        <label class="item" data-task="creatine">
-          <input id="creatine" type="checkbox" />
-          Kreatin
-        </label>
-
-        <label class="item" data-task="bed">
-          <input id="bed" type="checkbox" />
-          Seng
-        </label>
-
-        <label class="item" data-task="omega3">
-          <input id="omega3" type="checkbox" />
-          Omega-3
-        </label>
+      <section id="view-dashboard" class="view active">
+        <div class="dashboard-grid">
+          <article class="dash-card">
+            <p class="dash-label">Valgt dato</p>
+            <p id="dashboardDate" class="dash-value"></p>
+          </article>
+          <article class="dash-card">
+            <p class="dash-label">Fullført</p>
+            <p id="dashboardProgress" class="dash-value"></p>
+          </article>
+        </div>
+        <p id="dashboardHint" class="date-label"></p>
       </section>
 
-      <div class="actions">
-        <button id="saveButton" class="save-button" type="button">Lagre</button>
-      </div>
+      <section id="view-rutiner" class="view">
+        <p id="dateLabel" class="date-label"></p>
 
-      <p id="status" class="status" role="status" aria-live="polite"></p>
-      <p id="completeMessage" class="complete hidden">Alle oppgaver gjort 🙂</p>
+        <section class="checklist">
+          <label class="item" data-task="dishwasher">
+            <input id="dishwasher" type="checkbox" />
+            Oppvaskmaskin
+          </label>
+
+          <label class="item" data-task="creatine">
+            <input id="creatine" type="checkbox" />
+            Kreatin
+          </label>
+
+          <label class="item" data-task="bed">
+            <input id="bed" type="checkbox" />
+            Seng
+          </label>
+
+          <label class="item" data-task="omega3">
+            <input id="omega3" type="checkbox" />
+            Omega-3
+          </label>
+        </section>
+
+        <div class="actions">
+          <button id="saveButton" class="save-button" type="button">Lagre</button>
+        </div>
+
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+        <p id="completeMessage" class="complete hidden">Alle oppgaver gjort 🙂</p>
+      </section>
+
+      <section id="view-kalender" class="view">
+        <label class="date-input-label" for="datePicker">Velg dato</label>
+        <input id="datePicker" class="date-picker" type="date" />
+        <p id="calendarDateLabel" class="date-label"></p>
+        <p class="calendar-help">Bytt dato her for å hente og oppdatere rutiner for den dagen.</p>
+      </section>
     </main>
 
     <script>
       const TASKS = ["dishwasher", "creatine", "omega3", "bed"];
+      const VIEWS = ["dashboard", "rutiner", "kalender"];
       let selectedDate = formatDateToday();
-      let selectedDone = {
-        dishwasher: 0,
-        creatine: 0,
-        omega3: 0,
-        bed: 0
-      };
+
+      function emptyDoneState() {
+        return {
+          dishwasher: 0,
+          creatine: 0,
+          omega3: 0,
+          bed: 0
+        };
+      }
+
+      let selectedDone = emptyDoneState();
 
       function formatDateToday() {
         return new Date().toISOString().slice(0, 10);
@@ -303,11 +408,34 @@
         return TASKS.every((task) => doneState[task] === 1);
       }
 
+      function countDone(doneState) {
+        return TASKS.reduce((sum, task) => sum + (doneState[task] === 1 ? 1 : 0), 0);
+      }
+
       function updateDateLabel() {
-        const label = document.getElementById("dateLabel");
         const today = formatDateToday();
         const suffix = selectedDate === today ? " (i dag)" : "";
-        label.textContent = `Viser dato: ${formatDateLabel(selectedDate)}${suffix}`;
+        const formattedDate = `${formatDateLabel(selectedDate)}${suffix}`;
+
+        const routineLabel = document.getElementById("dateLabel");
+        const calendarLabel = document.getElementById("calendarDateLabel");
+        const dashboardDate = document.getElementById("dashboardDate");
+
+        routineLabel.textContent = `Viser dato: ${formattedDate}`;
+        calendarLabel.textContent = `Du redigerer: ${formattedDate}`;
+        dashboardDate.textContent = formattedDate;
+      }
+
+      function updateDashboard() {
+        const doneCount = countDone(selectedDone);
+        const dashboardProgress = document.getElementById("dashboardProgress");
+        const dashboardHint = document.getElementById("dashboardHint");
+
+        dashboardProgress.textContent = `${doneCount}/${TASKS.length}`;
+        dashboardHint.textContent =
+          doneCount === TASKS.length
+            ? "Alle rutiner er fullført."
+            : `${TASKS.length - doneCount} rutiner gjenstår.`;
       }
 
       function applySelectedState() {
@@ -332,6 +460,7 @@
 
         saveButton.disabled = doneEverything;
         completeMessage.classList.toggle("hidden", !doneEverything);
+        updateDashboard();
 
         if (doneEverything) {
           setStatus("Alle oppgaver gjort for valgt dato 🙂", "success");
@@ -341,23 +470,23 @@
       async function loadSelectedDateState() {
         try {
           const response = await fetch(`/entries/today?date=${encodeURIComponent(selectedDate)}`);
-          if (!response.ok) {
-            return;
+          if (response.ok) {
+            const body = await response.json();
+            selectedDone = {
+              dishwasher: body.dishwasher === 1 ? 1 : 0,
+              creatine: body.creatine === 1 ? 1 : 0,
+              omega3: body.omega3 === 1 ? 1 : 0,
+              bed: body.bed === 1 ? 1 : 0
+            };
+          } else {
+            selectedDone = emptyDoneState();
           }
-
-          const body = await response.json();
-          selectedDone = {
-            dishwasher: body.dishwasher === 1 ? 1 : 0,
-            creatine: body.creatine === 1 ? 1 : 0,
-            omega3: body.omega3 === 1 ? 1 : 0,
-            bed: body.bed === 1 ? 1 : 0
-          };
-
-          updateDateLabel();
-          applySelectedState();
         } catch (_) {
-          // Keep default empty state if status lookup fails.
+          selectedDone = emptyDoneState();
         }
+
+        updateDateLabel();
+        applySelectedState();
       }
 
       async function saveEntry() {
@@ -419,18 +548,9 @@
 
       function setupDateControls() {
         const datePicker = document.getElementById("datePicker");
-        const calendarToggle = document.getElementById("calendarToggle");
 
         datePicker.value = selectedDate;
         datePicker.max = formatDateToday();
-
-        calendarToggle.addEventListener("click", () => {
-          datePicker.classList.toggle("hidden");
-
-          if (!datePicker.classList.contains("hidden") && datePicker.showPicker) {
-            datePicker.showPicker();
-          }
-        });
 
         datePicker.addEventListener("change", async () => {
           if (!datePicker.value) {
@@ -443,7 +563,39 @@
         });
       }
 
+      function setView(viewName) {
+        if (!VIEWS.includes(viewName)) {
+          return;
+        }
+
+        document.querySelectorAll(".menu-button").forEach((button) => {
+          const isActive = button.dataset.view === viewName;
+          button.classList.toggle("active", isActive);
+          button.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+
+        document.querySelectorAll(".view").forEach((view) => {
+          view.classList.toggle("active", view.id === `view-${viewName}`);
+        });
+
+        if (location.hash !== `#${viewName}`) {
+          history.replaceState(null, "", `#${viewName}`);
+        }
+      }
+
+      function setupMenu() {
+        document.querySelectorAll(".menu-button").forEach((button) => {
+          button.addEventListener("click", () => {
+            setView(button.dataset.view);
+          });
+        });
+
+        const hashView = location.hash.replace("#", "");
+        setView(VIEWS.includes(hashView) ? hashView : "dashboard");
+      }
+
       document.getElementById("saveButton").addEventListener("click", saveEntry);
+      setupMenu();
       setupDateControls();
       loadSelectedDateState();
     </script>
