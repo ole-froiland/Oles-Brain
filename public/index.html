@@ -121,6 +121,38 @@
         background: var(--panel);
       }
 
+      .mobile-swipe-hint {
+        display: none;
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .mobile-page-nav {
+        display: none;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .mobile-page-button {
+        flex: 1;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 8px 10px;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text);
+        background: var(--surface);
+        cursor: pointer;
+      }
+
+      .mobile-page-button.active {
+        color: #ffffff;
+        border-color: var(--accent);
+        background: var(--accent);
+      }
+
       .panel-title {
         margin: 0 0 12px;
         font-family: "Fraunces", serif;
@@ -337,15 +369,66 @@
           min-height: clamp(540px, 68vh, 760px);
         }
       }
+
+      @media (max-width: 760px) {
+        body {
+          display: block;
+          padding: 0;
+        }
+
+        .card {
+          width: 100vw;
+          min-height: 100vh;
+          border-left: 0;
+          border-right: 0;
+          border-radius: 0;
+          padding: 18px 14px 20px;
+        }
+
+        .panel-grid {
+          grid-template-columns: none;
+          grid-auto-flow: column;
+          grid-auto-columns: 100%;
+          gap: 12px;
+          overflow-x: auto;
+          overflow-y: hidden;
+          margin-top: 16px;
+          scroll-snap-type: x mandatory;
+          scroll-padding-inline: 0;
+          scrollbar-width: none;
+          overscroll-behavior-x: contain;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .panel-grid::-webkit-scrollbar {
+          display: none;
+        }
+
+        .panel {
+          min-height: clamp(520px, 72vh, 760px);
+          scroll-snap-align: start;
+          scroll-snap-stop: always;
+        }
+
+        .mobile-swipe-hint {
+          display: block;
+        }
+
+        .mobile-page-nav {
+          display: flex;
+        }
+      }
     </style>
   </head>
   <body>
     <main class="card">
       <div class="header-row">
+        <h1>oles brain</h1>
         <button id="themeToggle" class="theme-button" type="button" aria-label="Bytt tema">
           Dark mode
         </button>
       </div>
+      <p class="mobile-swipe-hint">Sveip sidelengs mellom Dashboard, Rutiner og Kalender.</p>
 
       <section class="panel-grid" aria-label="Hovedmeny">
         <section class="panel">
@@ -405,6 +488,12 @@
           <p class="calendar-help">Bytt dato her for å hente og oppdatere rutiner for den dagen.</p>
         </section>
       </section>
+
+      <nav class="mobile-page-nav" aria-label="Panelvalg">
+        <button class="mobile-page-button active" type="button" data-panel-index="0">Dashboard</button>
+        <button class="mobile-page-button" type="button" data-panel-index="1">Rutiner</button>
+        <button class="mobile-page-button" type="button" data-panel-index="2">Kalender</button>
+      </nav>
     </main>
 
     <script>
@@ -625,9 +714,88 @@
         });
       }
 
+      function setupMobilePanelNavigation() {
+        const panelGrid = document.querySelector(".panel-grid");
+        const panels = Array.from(panelGrid ? panelGrid.querySelectorAll(".panel") : []);
+        const buttons = Array.from(document.querySelectorAll(".mobile-page-button"));
+
+        if (!panelGrid || panels.length === 0 || buttons.length === 0) {
+          return;
+        }
+
+        let activeIndex = 0;
+        let ticking = false;
+
+        function setActiveButton(index) {
+          buttons.forEach((button) => {
+            button.classList.toggle("active", Number(button.dataset.panelIndex) === index);
+          });
+        }
+
+        function scrollToPanel(index) {
+          const targetPanel = panels[index];
+          if (!targetPanel) {
+            return;
+          }
+
+          panelGrid.scrollTo({
+            left: targetPanel.offsetLeft,
+            behavior: "smooth"
+          });
+          activeIndex = index;
+          setActiveButton(index);
+        }
+
+        function findClosestPanelIndex() {
+          const currentScroll = panelGrid.scrollLeft;
+          let closestIndex = 0;
+          let smallestDistance = Number.POSITIVE_INFINITY;
+
+          panels.forEach((panel, index) => {
+            const distance = Math.abs(panel.offsetLeft - currentScroll);
+            if (distance < smallestDistance) {
+              smallestDistance = distance;
+              closestIndex = index;
+            }
+          });
+
+          return closestIndex;
+        }
+
+        buttons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const index = Number(button.dataset.panelIndex);
+            scrollToPanel(index);
+          });
+        });
+
+        panelGrid.addEventListener(
+          "scroll",
+          () => {
+            if (ticking) {
+              return;
+            }
+
+            ticking = true;
+            window.requestAnimationFrame(() => {
+              const closestIndex = findClosestPanelIndex();
+              if (closestIndex !== activeIndex) {
+                activeIndex = closestIndex;
+                setActiveButton(closestIndex);
+              }
+              ticking = false;
+            });
+          },
+          { passive: true }
+        );
+
+        setActiveButton(activeIndex);
+      }
+
       document.getElementById("saveButton").addEventListener("click", saveEntry);
       setupThemeToggle();
       setupDateControls();
+      setupMobilePanelNavigation();
       loadSelectedDateState();
     </script>
   </body>
