@@ -94,17 +94,15 @@ app.post("/entries", (req, res) => {
 
   const noteValue = typeof note === "string" && note.trim() !== "" ? note : null;
 
-  db.run(
-    "INSERT INTO entries (date, dishwasher, creatine, omega3, bed, note) VALUES (?, ?, ?, ?, ?, ?)",
-    [date, dishwasher, creatine, omega3Value, bed, noteValue],
-    function onInsert(err) {
-      if (err) {
-        res.status(500).json({ error: "Kunne ikke lagre" });
-        return;
-      }
+  db.get("SELECT id FROM entries WHERE date = ? ORDER BY id DESC LIMIT 1", [date], (selectErr, row) => {
+    if (selectErr) {
+      res.status(500).json({ error: "Kunne ikke lagre" });
+      return;
+    }
 
-      res.status(201).json({
-        id: this.lastID,
+    const respondSaved = (id, statusCode) => {
+      res.status(statusCode).json({
+        id,
         date,
         dishwasher,
         creatine,
@@ -112,8 +110,47 @@ app.post("/entries", (req, res) => {
         bed,
         note: noteValue
       });
+    };
+
+    const existingId = Number(row && row.id);
+    if (Number.isFinite(existingId)) {
+      db.run(
+        `
+          UPDATE entries
+          SET dishwasher = ?, creatine = ?, omega3 = ?, bed = ?, note = ?, created_at = datetime('now')
+          WHERE id = ?
+        `,
+        [dishwasher, creatine, omega3Value, bed, noteValue, existingId],
+        (updateErr) => {
+          if (updateErr) {
+            res.status(500).json({ error: "Kunne ikke lagre" });
+            return;
+          }
+
+          db.run("DELETE FROM entries WHERE date = ? AND id <> ?", [date, existingId], (deleteErr) => {
+            if (deleteErr) {
+              console.error("Kunne ikke rydde duplikater for dato:", date, deleteErr.message);
+            }
+            respondSaved(existingId, 200);
+          });
+        }
+      );
+      return;
     }
-  );
+
+    db.run(
+      "INSERT INTO entries (date, dishwasher, creatine, omega3, bed, note) VALUES (?, ?, ?, ?, ?, ?)",
+      [date, dishwasher, creatine, omega3Value, bed, noteValue],
+      function onInsert(insertErr) {
+        if (insertErr) {
+          res.status(500).json({ error: "Kunne ikke lagre" });
+          return;
+        }
+
+        respondSaved(this.lastID, 201);
+      }
+    );
+  });
 });
 
 app.get("/entries/today", (req, res) => {
@@ -127,12 +164,14 @@ app.get("/entries/today", (req, res) => {
   db.get(
     `
       SELECT
-        COALESCE(MAX(dishwasher), 0) AS dishwasher,
-        COALESCE(MAX(creatine), 0) AS creatine,
-        COALESCE(MAX(omega3), 0) AS omega3,
-        COALESCE(MAX(bed), 0) AS bed
+        dishwasher,
+        creatine,
+        COALESCE(omega3, 0) AS omega3,
+        bed
       FROM entries
       WHERE date = ?
+      ORDER BY id DESC
+      LIMIT 1
     `,
     [date],
     (err, row) => {
@@ -194,7 +233,22 @@ app.get("/entries.csv", (req, res) => {
   res.setHeader("Surrogate-Control", "no-store");
 
   db.all(
-    "SELECT id, date, dishwasher, creatine, COALESCE(omega3, 0) AS omega3, bed, COALESCE(note, '') AS note FROM entries ORDER BY date ASC, id ASC",
+    `
+      SELECT
+        e.date AS date,
+        e.dishwasher AS dishwasher,
+        e.creatine AS creatine,
+        COALESCE(e.omega3, 0) AS omega3,
+        e.bed AS bed,
+        COALESCE(e.note, '') AS note
+      FROM entries e
+      INNER JOIN (
+        SELECT date, MAX(id) AS latest_id
+        FROM entries
+        GROUP BY date
+      ) latest ON latest.latest_id = e.id
+      ORDER BY e.date ASC
+    `,
     (err, rows) => {
       if (err) {
         res.status(500).type("text/plain; charset=utf-8").send("Kunne ikke hente CSV");

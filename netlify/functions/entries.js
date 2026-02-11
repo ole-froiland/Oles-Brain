@@ -9,6 +9,30 @@ function json(statusCode, body) {
   };
 }
 
+function numericIdOrFallback(entry, fallback) {
+  const id = Number(entry && entry.id);
+  return Number.isFinite(id) ? id : fallback;
+}
+
+function findLatestIndexByDate(entries, date) {
+  let latestIndex = -1;
+  let latestKey = Number.NEGATIVE_INFINITY;
+
+  entries.forEach((entry, index) => {
+    if (!entry || entry.date !== date) {
+      return;
+    }
+
+    const key = numericIdOrFallback(entry, index);
+    if (latestIndex === -1 || key > latestKey) {
+      latestIndex = index;
+      latestKey = key;
+    }
+  });
+
+  return latestIndex;
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return {
@@ -35,11 +59,16 @@ exports.handler = async (event) => {
 
   try {
     const entries = await readEntries(event);
-    const id = getNextId(entries);
     const createdAt = formatCreatedAt();
+    const date = normalized.value.date;
+    const latestIndex = findLatestIndexByDate(entries, date);
+    const isUpdate = latestIndex >= 0;
+    const existing = isUpdate ? entries[latestIndex] : null;
+    const nextId = isUpdate ? numericIdOrFallback(existing, getNextId(entries)) : getNextId(entries);
+
     const entry = {
-      id,
-      date: normalized.value.date,
+      id: nextId,
+      date,
       dishwasher: normalized.value.dishwasher,
       creatine: normalized.value.creatine,
       omega3: normalized.value.omega3,
@@ -48,10 +77,20 @@ exports.handler = async (event) => {
       created_at: createdAt
     };
 
-    entries.push(entry);
+    if (isUpdate) {
+      entries[latestIndex] = entry;
+      for (let index = entries.length - 1; index >= 0; index -= 1) {
+        if (index !== latestIndex && entries[index] && entries[index].date === date) {
+          entries.splice(index, 1);
+        }
+      }
+    } else {
+      entries.push(entry);
+    }
+
     await writeEntries(event, entries);
 
-    return json(201, {
+    return json(isUpdate ? 200 : 201, {
       id: entry.id,
       date: entry.date,
       dishwasher: entry.dishwasher,

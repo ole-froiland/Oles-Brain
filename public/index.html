@@ -24,8 +24,6 @@
         --accent-pressed: #246545;
         --error: #a73d32;
         --border: #d7dfd5;
-        --theme-button-bg: #ffffff;
-        --theme-button-hover: #f3f6f3;
         --shadow: 0 18px 42px rgba(34, 53, 40, 0.14);
       }
 
@@ -42,8 +40,6 @@
         --accent-pressed: #379b66;
         --error: #ff8d82;
         --border: #2d3a32;
-        --theme-button-bg: #1f2c34;
-        --theme-button-hover: #273741;
         --shadow: 0 20px 44px rgba(0, 0, 0, 0.46);
       }
 
@@ -81,43 +77,6 @@
         font-family: "Fraunces", serif;
         font-size: clamp(2rem, 5vw, 2.7rem);
         line-height: 1;
-      }
-
-      .theme-button {
-        position: fixed;
-        right: clamp(14px, 2vw, 24px);
-        bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(14px, 2vw, 24px));
-        z-index: 20;
-        width: 52px;
-        height: 52px;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 0;
-        font: inherit;
-        font-size: 1.35rem;
-        line-height: 1;
-        color: var(--text);
-        background: var(--theme-button-bg);
-        box-shadow: 0 8px 18px rgba(16, 28, 22, 0.26);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
-      }
-
-      .theme-button:hover {
-        background: var(--theme-button-hover);
-        transform: translateY(-1px);
-      }
-
-      .theme-button:active {
-        transform: translateY(0);
-      }
-
-      .theme-button:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
       }
 
       .panel-grid {
@@ -286,37 +245,6 @@
         accent-color: var(--accent);
       }
 
-      .actions {
-        margin-top: 16px;
-      }
-
-      .save-button {
-        width: 100%;
-        border: 0;
-        border-radius: 12px;
-        padding: 12px 14px;
-        font: inherit;
-        font-weight: 700;
-        color: #ffffff;
-        background: var(--accent);
-        cursor: pointer;
-        transition: transform 80ms ease, background-color 140ms ease;
-      }
-
-      .save-button:hover {
-        background: var(--accent-pressed);
-      }
-
-      .save-button:active {
-        transform: translateY(1px);
-      }
-
-      .save-button:disabled {
-        background: #8ea99a;
-        cursor: not-allowed;
-        transform: none;
-      }
-
       .status {
         min-height: 1.3em;
         margin: 10px 0 0;
@@ -480,10 +408,6 @@
             </label>
           </section>
 
-          <div class="actions">
-            <button id="saveButton" class="save-button" type="button">Lagre</button>
-          </div>
-
           <p id="status" class="status" role="status" aria-live="polite"></p>
           <p id="completeMessage" class="complete hidden">Alle oppgaver gjort 🙂</p>
         </section>
@@ -503,14 +427,12 @@
         <button class="mobile-page-button" type="button" data-panel-index="2">Kalender</button>
       </nav>
     </main>
-    <button id="themeToggle" class="theme-button" type="button" aria-label="Bytt til mørkt tema" title="Mørkt tema">
-      ☾
-    </button>
 
     <script>
       const TASKS = ["dishwasher", "creatine", "omega3", "bed"];
       const THEME_STORAGE_KEY = "oles-brain-theme";
       let selectedDate = formatDateToday();
+      let saveQueue = Promise.resolve();
 
       function emptyDoneState() {
         return {
@@ -574,7 +496,6 @@
 
       function applySelectedState() {
         const doneEverything = allDone(selectedDone);
-        const saveButton = document.getElementById("saveButton");
         const completeMessage = document.getElementById("completeMessage");
 
         TASKS.forEach((task) => {
@@ -588,11 +509,9 @@
 
           if (checkbox) {
             checkbox.checked = done;
-            checkbox.disabled = done;
           }
         });
 
-        saveButton.disabled = doneEverything;
         completeMessage.classList.toggle("hidden", !doneEverything);
         updateDashboard();
 
@@ -623,34 +542,18 @@
         applySelectedState();
       }
 
-      async function saveEntry() {
-        if (allDone(selectedDone)) {
-          applySelectedState();
-          return;
-        }
-
-        setStatus("Lagrer...", "pending");
-
-        const payload = {
-          date: selectedDate,
-          dishwasher:
-            selectedDone.dishwasher === 1 || document.getElementById("dishwasher").checked ? 1 : 0,
-          creatine:
-            selectedDone.creatine === 1 || document.getElementById("creatine").checked ? 1 : 0,
-          omega3: selectedDone.omega3 === 1 || document.getElementById("omega3").checked ? 1 : 0,
-          bed: selectedDone.bed === 1 || document.getElementById("bed").checked ? 1 : 0
+      function buildPayload(date, doneState) {
+        return {
+          date,
+          dishwasher: doneState.dishwasher === 1 ? 1 : 0,
+          creatine: doneState.creatine === 1 ? 1 : 0,
+          omega3: doneState.omega3 === 1 ? 1 : 0,
+          bed: doneState.bed === 1 ? 1 : 0
         };
+      }
 
-        const changedAnything =
-          payload.dishwasher !== selectedDone.dishwasher ||
-          payload.creatine !== selectedDone.creatine ||
-          payload.omega3 !== selectedDone.omega3 ||
-          payload.bed !== selectedDone.bed;
-
-        if (!changedAnything) {
-          setStatus("Huk av minst én oppgave.", "error");
-          return;
-        }
+      async function persistEntry(date, doneState) {
+        const payload = buildPayload(date, doneState);
 
         try {
           const response = await fetch("/entries", {
@@ -661,23 +564,46 @@
 
           if (!response.ok) {
             const errorBody = await response.json().catch(() => ({}));
-            setStatus(errorBody.error || "Kunne ikke lagre", "error");
+            if (selectedDate === date) {
+              setStatus(errorBody.error || "Kunne ikke lagre automatisk", "error");
+            }
             return;
           }
 
-          const body = await response.json().catch(() => payload);
-          selectedDone = {
-            dishwasher: body.dishwasher === 1 ? 1 : payload.dishwasher,
-            creatine: body.creatine === 1 ? 1 : payload.creatine,
-            omega3: body.omega3 === 1 ? 1 : payload.omega3,
-            bed: body.bed === 1 ? 1 : payload.bed
-          };
-
-          applySelectedState();
-          setStatus("Lagret", "success");
+          if (selectedDate === date) {
+            setStatus("Lagret automatisk", "success");
+          }
         } catch (_) {
-          setStatus("Nettverksfeil", "error");
+          if (selectedDate === date) {
+            setStatus("Nettverksfeil (ikke lagret)", "error");
+          }
         }
+      }
+
+      function queueAutoSave() {
+        const dateSnapshot = selectedDate;
+        const doneSnapshot = { ...selectedDone };
+
+        if (selectedDate === dateSnapshot) {
+          setStatus("Lagrer...", "pending");
+        }
+
+        saveQueue = saveQueue.then(() => persistEntry(dateSnapshot, doneSnapshot));
+      }
+
+      function setupTaskToggles() {
+        TASKS.forEach((task) => {
+          const checkbox = document.getElementById(task);
+          if (!checkbox) {
+            return;
+          }
+
+          checkbox.addEventListener("change", () => {
+            selectedDone[task] = checkbox.checked ? 1 : 0;
+            applySelectedState();
+            queueAutoSave();
+          });
+        });
       }
 
       function setupDateControls() {
@@ -699,17 +625,12 @@
 
       function applyTheme(theme) {
         const root = document.documentElement;
-        const button = document.getElementById("themeToggle");
         const isDark = theme === "dark";
 
         root.setAttribute("data-theme", isDark ? "dark" : "light");
-        button.textContent = isDark ? "☀" : "☾";
-        button.setAttribute("aria-label", isDark ? "Bytt til lyst tema" : "Bytt til mørkt tema");
-        button.setAttribute("title", isDark ? "Lyst tema" : "Mørkt tema");
       }
 
-      function setupThemeToggle() {
-        const button = document.getElementById("themeToggle");
+      function setupTheme() {
         const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
           ? "dark"
           : "light";
@@ -717,14 +638,6 @@
         const initialTheme = savedTheme === "dark" || savedTheme === "light" ? savedTheme : preferredTheme;
 
         applyTheme(initialTheme);
-
-        button.addEventListener("click", () => {
-          const currentTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-          const nextTheme = currentTheme === "dark" ? "light" : "dark";
-
-          applyTheme(nextTheme);
-          localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-        });
       }
 
       function setupMobilePanelNavigation() {
@@ -805,9 +718,9 @@
         setActiveButton(activeIndex);
       }
 
-      document.getElementById("saveButton").addEventListener("click", saveEntry);
-      setupThemeToggle();
+      setupTheme();
       setupDateControls();
+      setupTaskToggles();
       setupMobilePanelNavigation();
       loadSelectedDateState();
     </script>
