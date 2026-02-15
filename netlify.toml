@@ -25,3 +25,21 @@
   to = "/.netlify/functions/entries-csv"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/screen-time"
+  to = "/.netlify/functions/screen-time"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/screen-time/today"
+  to = "/.netlify/functions/screen-time-today"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/notes/shorten"
+  to = "/.netlify/functions/note-shorten"
+  status = 200
+  force = true

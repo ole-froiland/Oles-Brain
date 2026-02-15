@@ -7,6 +7,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const CSV_KEY = process.env.CSV_KEY || "DIN_KEY";
 const RESET_KEY = process.env.RESET_KEY || CSV_KEY;
+const SCREEN_TIME_KEY = process.env.SCREEN_TIME_KEY || CSV_KEY;
+const OPENAI_API_KEY = typeof process.env.OPENAI_API_KEY === "string" ? process.env.OPENAI_API_KEY.trim() : "";
+const OPENAI_NOTE_MODEL = process.env.OPENAI_NOTE_MODEL || "gpt-4.1-mini";
 
 const dataDir = path.join(__dirname, "data");
 const dbPath = path.join(dataDir, "entries.db");
@@ -24,6 +27,17 @@ db.serialize(() => {
       omega3 INTEGER NOT NULL CHECK (omega3 IN (0, 1)),
       bed INTEGER NOT NULL CHECK (bed IN (0, 1)),
       note TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS screen_time_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      total_minutes INTEGER NOT NULL CHECK (total_minutes >= 0),
+      pickups INTEGER CHECK (pickups >= 0),
+      source TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
@@ -62,8 +76,57 @@ function isValidNote(value) {
   return value === undefined || value === null || typeof value === "string";
 }
 
+function isNonNegativeInteger(value) {
+  return Number.isInteger(value) && value >= 0;
+}
+
+function isValidSource(value) {
+  return value === undefined || value === null || (typeof value === "string" && value.length <= 120);
+}
+
 function todayDateString() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function normalizeScreenTimePayload(payload) {
+  const { date, total_minutes: totalMinutesRaw, pickups: pickupsRaw, source } = payload || {};
+  const dateValue = date === undefined || date === null || date === "" ? todayDateString() : date;
+
+  if (!isValidDateString(dateValue) || !isNonNegativeInteger(totalMinutesRaw) || !isValidSource(source)) {
+    return { error: "Ugyldig payload" };
+  }
+
+  let pickupsValue = null;
+  if (pickupsRaw !== undefined && pickupsRaw !== null && pickupsRaw !== "") {
+    if (!isNonNegativeInteger(pickupsRaw)) {
+      return { error: "Ugyldig payload" };
+    }
+    pickupsValue = pickupsRaw;
+  }
+
+  return {
+    value: {
+      date: dateValue,
+      totalMinutes: totalMinutesRaw,
+      pickups: pickupsValue,
+      source: typeof source === "string" && source.trim() !== "" ? source.trim() : null
+    }
+  };
+}
+
+function screenTimeKeyFromRequest(req) {
+  const queryKey = req.query && req.query.key;
+  const headerKey = req.get("x-screen-time-key");
+
+  if (typeof queryKey === "string" && queryKey.trim() !== "") {
+    return queryKey.trim();
+  }
+
+  if (typeof headerKey === "string" && headerKey.trim() !== "") {
+    return headerKey.trim();
+  }
+
+  return "";
 }
 
 function escapeCsvValue(value) {
@@ -75,6 +138,153 @@ function escapeCsvValue(value) {
 
   return stringValue;
 }
+
+function normalizeSingleLine(value) {
+  return String(value || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function shortenNoteHeuristic(inputText) {
+  let text = normalizeSingleLine(inputText);
+  if (!text) {
+    return "";
+  }
+
+  const removablePhrases = [
+    /\bom du skjønner\b/gi,
+    /\bhvis du skjønner\b/gi,
+    /\bpå en måte\b/gi,
+    /\bfor å si det sånn\b/gi,
+    /\bhva skal jeg si\b/gi
+  ];
+
+  removablePhrases.forEach((pattern) => {
+    text = text.replace(pattern, " ");
+  });
+
+  text = text.replace(/\b(eh|ehh|ehm|mmm|liksom|lissom|altså|asså|typ|sånn)\b/gi, " ");
+  text = text.replace(/\s+/g, " ").trim();
+
+  const words = text.split(" ").filter(Boolean);
+  const dedupedWords = [];
+  let previousKey = "";
+  words.forEach((word) => {
+    const key = word.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
+    if (key && key === previousKey) {
+      return;
+    }
+    dedupedWords.push(word);
+    if (key) {
+      previousKey = key;
+    }
+  });
+
+  text = dedupedWords.join(" ").trim();
+
+  const compactWords = text.split(" ").filter(Boolean);
+  const MAX_WORDS = 14;
+  if (compactWords.length > MAX_WORDS) {
+    text = compactWords.slice(0, MAX_WORDS).join(" ");
+  }
+
+  text = text
+    .replace(/^[•*-]\s*/, "")
+    .replace(/[;:,.\-–\s]+$/g, "")
+    .trim();
+
+  if (!text) {
+    return "";
+  }
+
+  return text[0].toUpperCase() + text.slice(1);
+}
+
+function extractResponseOutputText(data) {
+  if (data && typeof data.output_text === "string" && data.output_text.trim() !== "") {
+    return data.output_text.trim();
+  }
+
+  if (!data || !Array.isArray(data.output)) {
+    return "";
+  }
+
+  const pieces = [];
+  data.output.forEach((item) => {
+    if (!item || !Array.isArray(item.content)) {
+      return;
+    }
+
+    item.content.forEach((contentItem) => {
+      if (contentItem && typeof contentItem.text === "string") {
+        pieces.push(contentItem.text);
+      } else if (contentItem && typeof contentItem.output_text === "string") {
+        pieces.push(contentItem.output_text);
+      }
+    });
+  });
+
+  return pieces.join(" ").trim();
+}
+
+async function shortenNoteWithOpenAI(rawText) {
+  if (!OPENAI_API_KEY || typeof fetch !== "function") {
+    return null;
+  }
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: OPENAI_NOTE_MODEL,
+      instructions:
+        "Skriv om brukerens tale/notat til ett kort punkt på norsk bokmål. Fjern fyllord og gjentakelser, behold konkrete fakta (hvem/hva/når/tall). Returner bare selve teksten.",
+      input: rawText,
+      max_output_tokens: 60,
+      temperature: 0.2
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI svarte ${response.status}`);
+  }
+
+  const data = await response.json();
+  const outputText = extractResponseOutputText(data);
+  return outputText || null;
+}
+
+app.post("/notes/shorten", async (req, res) => {
+  const { text } = req.body || {};
+  if (typeof text !== "string") {
+    res.status(400).json({ error: "Ugyldig payload" });
+    return;
+  }
+
+  const inputText = normalizeSingleLine(text);
+  if (!inputText) {
+    res.status(200).json({ short_text: "" });
+    return;
+  }
+
+  let shortText = shortenNoteHeuristic(inputText);
+  if (OPENAI_API_KEY) {
+    try {
+      const aiText = await shortenNoteWithOpenAI(inputText);
+      if (aiText) {
+        shortText = shortenNoteHeuristic(aiText) || shortText;
+      }
+    } catch (err) {
+      console.error("Kunne ikke forkorte notat med AI:", err && err.message ? err.message : err);
+    }
+  }
+
+  res.status(200).json({ short_text: shortText });
+});
 
 app.post("/entries", (req, res) => {
   const { date, dishwasher, creatine, omega3, bed, note } = req.body || {};
@@ -167,7 +377,8 @@ app.get("/entries/today", (req, res) => {
         dishwasher,
         creatine,
         COALESCE(omega3, 0) AS omega3,
-        bed
+        bed,
+        COALESCE(note, '') AS note
       FROM entries
       WHERE date = ?
       ORDER BY id DESC
@@ -185,7 +396,8 @@ app.get("/entries/today", (req, res) => {
         dishwasher: row && row.dishwasher === 1 ? 1 : 0,
         creatine: row && row.creatine === 1 ? 1 : 0,
         omega3: row && row.omega3 === 1 ? 1 : 0,
-        bed: row && row.bed === 1 ? 1 : 0
+        bed: row && row.bed === 1 ? 1 : 0,
+        note: row && typeof row.note === "string" ? row.note : ""
       };
 
       res.status(200).json({
@@ -216,6 +428,118 @@ app.post("/entries/reset", (req, res) => {
 
     res.status(200).json({ ok: true, deleted: this.changes || 0 });
   });
+});
+
+app.post("/screen-time", (req, res) => {
+  const key = screenTimeKeyFromRequest(req);
+  if (key !== SCREEN_TIME_KEY) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const normalized = normalizeScreenTimePayload(req.body);
+  if (normalized.error) {
+    res.status(400).json({ error: normalized.error });
+    return;
+  }
+
+  const { date, totalMinutes, pickups, source } = normalized.value;
+
+  db.get("SELECT id FROM screen_time_entries WHERE date = ? ORDER BY id DESC LIMIT 1", [date], (selectErr, row) => {
+    if (selectErr) {
+      res.status(500).json({ error: "Kunne ikke lagre skjermtid" });
+      return;
+    }
+
+    const respondSaved = (id, statusCode) => {
+      res.status(statusCode).json({
+        id,
+        date,
+        total_minutes: totalMinutes,
+        pickups,
+        source
+      });
+    };
+
+    const existingId = Number(row && row.id);
+    if (Number.isFinite(existingId)) {
+      db.run(
+        `
+          UPDATE screen_time_entries
+          SET total_minutes = ?, pickups = ?, source = ?, created_at = datetime('now')
+          WHERE id = ?
+        `,
+        [totalMinutes, pickups, source, existingId],
+        (updateErr) => {
+          if (updateErr) {
+            res.status(500).json({ error: "Kunne ikke lagre skjermtid" });
+            return;
+          }
+
+          db.run("DELETE FROM screen_time_entries WHERE date = ? AND id <> ?", [date, existingId], (deleteErr) => {
+            if (deleteErr) {
+              console.error("Kunne ikke rydde skjermtid-duplikater for dato:", date, deleteErr.message);
+            }
+
+            respondSaved(existingId, 200);
+          });
+        }
+      );
+      return;
+    }
+
+    db.run(
+      "INSERT INTO screen_time_entries (date, total_minutes, pickups, source) VALUES (?, ?, ?, ?)",
+      [date, totalMinutes, pickups, source],
+      function onInsert(insertErr) {
+        if (insertErr) {
+          res.status(500).json({ error: "Kunne ikke lagre skjermtid" });
+          return;
+        }
+
+        respondSaved(this.lastID, 201);
+      }
+    );
+  });
+});
+
+app.get("/screen-time/today", (req, res) => {
+  const date = req.query.date || todayDateString();
+
+  if (!isValidDateString(date)) {
+    res.status(400).json({ error: "Ugyldig dato" });
+    return;
+  }
+
+  db.get(
+    `
+      SELECT
+        total_minutes,
+        pickups,
+        COALESCE(source, '') AS source,
+        created_at
+      FROM screen_time_entries
+      WHERE date = ?
+      ORDER BY id DESC
+      LIMIT 1
+    `,
+    [date],
+    (err, row) => {
+      if (err) {
+        res.status(500).json({ error: "Kunne ikke hente skjermtid" });
+        return;
+      }
+
+      res.status(200).json({
+        date,
+        total_minutes: row ? Number(row.total_minutes) : null,
+        pickups: row && row.pickups !== null && row.pickups !== undefined ? Number(row.pickups) : null,
+        source: row && typeof row.source === "string" ? row.source : "",
+        created_at: row && typeof row.created_at === "string" ? row.created_at : null,
+        has_data: Boolean(row)
+      });
+    }
+  );
 });
 
 app.get("/entries.csv", (req, res) => {

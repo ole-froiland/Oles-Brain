@@ -16,6 +16,12 @@ npm install
 npm start
 ```
 
+Valgfritt (for egen nøkkel på skjermtid lokalt):
+
+```bash
+SCREEN_TIME_KEY=DIN_KEY npm start
+```
+
 Bruk app:
 
 - `http://localhost:3000/`
@@ -38,6 +44,7 @@ Sett env var i Netlify:
 
 - `CSV_KEY=DIN_KEY` (eller din egen nøkkel)
 - `RESET_KEY=DIN_KEY` (eller egen nøkkel for reset)
+- `SCREEN_TIME_KEY=DIN_KEY` (egen nøkkel for skjermtid-import fra mobil)
 
 Bruk app i prod:
 
@@ -73,3 +80,32 @@ Google Sheets:
 `POST /entries/reset?key=DIN_KEY` nullstiller alle lagrede entries.
 
 `GET /entries/today?date=YYYY-MM-DD` returnerer dagens status (for å skjule ferdige oppgaver i UI).
+
+`POST /screen-time?key=DIN_KEY`
+
+```json
+{
+  "date": "YYYY-MM-DD",
+  "total_minutes": 182,
+  "pickups": 74,
+  "source": "ios-shortcuts"
+}
+```
+
+- `date` er valgfri (default = i dag)
+- `pickups` er valgfri
+
+`GET /screen-time/today?date=YYYY-MM-DD` returnerer skjermtid for valgt dato.
+
+## iPhone Shortcut (skjermtid til Oles-Brain)
+
+1. Lag en Shortcut som henter dagens skjermtid (f.eks. total minutter + antall pickups).
+2. Legg til `Get Contents of URL` med:
+   - URL: `https://oles-brain.netlify.app/screen-time?key=DIN_KEY`
+   - Method: `POST`
+   - Request Body (JSON):
+     - `date`: `Current Date` formatert som `yyyy-MM-dd`
+     - `total_minutes`: heltall
+     - `pickups`: heltall (valgfri)
+     - `source`: `"ios-shortcuts"`
+3. Kjør shortcuten manuelt eller via automasjon (f.eks. hver kveld).

@@ -64,11 +64,11 @@
 
       .card {
         width: min(1400px, 96vw);
-        background: var(--card);
-        border: 1px solid var(--border);
+        background: transparent;
+        border: none;
         border-radius: 18px;
         padding: 24px;
-        box-shadow: var(--shadow);
+        box-shadow: none;
         animation: card-enter 380ms ease-out both;
       }
 
@@ -158,6 +158,172 @@
         font-weight: 700;
       }
 
+      .dash-observation {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.35;
+      }
+
+      .note-card {
+        margin-top: 6px;
+      }
+
+      .note-label {
+        display: block;
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .note-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .note-header-controls {
+        display: inline-flex;
+        gap: 8px;
+      }
+
+      .note-header .note-label {
+        margin: 0;
+      }
+
+      .note-voice-bubble {
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text);
+        background: var(--surface-soft);
+        cursor: pointer;
+        transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease;
+      }
+
+      .note-add-button {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0 12px;
+        height: 40px;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text);
+        background: var(--surface);
+        cursor: pointer;
+      }
+
+      .note-add-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .note-voice-bubble:hover {
+        transform: translateY(-1px);
+      }
+
+      .note-voice-bubble.active {
+        color: #ffffff;
+        border-color: var(--accent);
+        background: var(--accent);
+      }
+
+      .note-voice-bubble:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .note-voice-icon {
+        width: 20px;
+        height: 20px;
+        display: block;
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .note-input {
+        width: 100%;
+        min-height: 220px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font: inherit;
+        line-height: 1.4;
+        color: var(--text);
+        background: var(--surface-soft);
+        resize: vertical;
+      }
+
+      .note-input::placeholder {
+        color: var(--muted);
+      }
+
+      .note-point-actions {
+        margin: 0 0 10px;
+      }
+
+      .note-point-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 6px;
+      }
+
+      .note-point-item {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .note-point-text {
+        margin: 0;
+        flex: 1;
+        font-size: 0.86rem;
+        line-height: 1.35;
+      }
+
+      .note-point-remove {
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text);
+        background: var(--surface-soft);
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
       .date-input-label {
         display: block;
         margin: 0 0 8px;
@@ -175,15 +341,35 @@
         background: var(--surface);
       }
 
+      .calendar-date-label {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
       .date-label {
         margin: 0;
         color: var(--muted);
         font-size: 0.9rem;
       }
 
-      .calendar-help {
-        margin: 12px 0 0;
+      .fixture-quick-list {
+        margin: 8px 0 0 18px;
+        padding: 0;
         color: var(--muted);
+        font-size: 0.9rem;
+        display: grid;
+        gap: 4px;
+      }
+
+      .fixture-quick-list:empty {
+        display: none;
+      }
+
+      .fixture-quick-list.match {
+        color: var(--text);
+        font-weight: 600;
       }
 
       .checklist {
@@ -352,6 +538,10 @@
           scroll-snap-stop: always;
         }
 
+        .note-input {
+          min-height: 160px;
+        }
+
         .mobile-swipe-hint {
           display: block;
         }
@@ -373,13 +563,52 @@
             <article class="dash-card">
               <p class="dash-label">Valgt dato</p>
               <p id="dashboardDate" class="dash-value"></p>
+              <p id="dashboardDateObs" class="dash-observation"></p>
             </article>
             <article class="dash-card">
-              <p class="dash-label">Fullført</p>
+              <p class="dash-label">Fullført rutiner</p>
               <p id="dashboardProgress" class="dash-value"></p>
+              <p id="dashboardProgressObs" class="dash-observation"></p>
+            </article>
+            <article class="dash-card">
+              <p class="dash-label">Skjermtid</p>
+              <p id="dashboardScreenTime" class="dash-value">Ikke registrert</p>
+              <p id="dashboardScreenTimeObs" class="dash-observation"></p>
             </article>
           </div>
-          <p id="dashboardHint" class="date-label"></p>
+          <article class="dash-card note-card">
+            <div class="note-header">
+              <label class="note-label" for="dailyNote">Notat</label>
+              <div class="note-header-controls">
+                <button
+                  id="noteAddPointButton"
+                  class="note-add-button"
+                  type="button"
+                  aria-label="Legg til punkt"
+                  title="Legg til punkt"
+                >
+                  Legg til
+                </button>
+                <button
+                  id="noteVoiceButton"
+                  class="note-voice-bubble"
+                  type="button"
+                  aria-label="Snakk inn notat"
+                  title="Snakk inn notat"
+                >
+                  <svg class="note-voice-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M12 4a3 3 0 0 0-3 3v4a3 3 0 1 0 6 0V7a3 3 0 0 0-3-3zm-5 7a1 1 0 1 0-2 0 7 7 0 0 0 6 6.92V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.08A7 7 0 0 0 19 11a1 1 0 1 0-2 0 5 5 0 1 1-10 0z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <span class="visually-hidden">Snakk inn notat</span>
+                </button>
+              </div>
+            </div>
+            <div id="notePointActions" class="note-point-actions"></div>
+            <textarea id="dailyNote" class="note-input" placeholder="Skriv tekst her og trykk Legg til..."></textarea>
+          </article>
         </section>
 
         <section class="panel">
@@ -416,8 +645,8 @@
           <h2 class="panel-title">Kalender</h2>
           <label class="date-input-label" for="datePicker">Velg dato</label>
           <input id="datePicker" class="date-picker" type="date" />
-          <p id="calendarDateLabel" class="date-label"></p>
-          <p class="calendar-help">Bytt dato her for å hente og oppdatere rutiner for den dagen.</p>
+          <p id="calendarDateLabel" class="calendar-date-label" aria-live="polite"></p>
+          <ul id="fixtureQuickList" class="fixture-quick-list" aria-live="polite"></ul>
         </section>
       </section>
 
@@ -430,9 +659,31 @@
 
     <script>
       const TASKS = ["dishwasher", "creatine", "omega3", "bed"];
+      const WORKOUT_PLAN_BY_WEEKDAY = {
+        0: "Løping",
+        1: "Push",
+        2: "Pull",
+        3: "Legs",
+        4: "Push",
+        5: "Pull"
+      };
       const THEME_STORAGE_KEY = "oles-brain-theme";
+      const NOTE_SAVE_DELAY_MS = 700;
+      const NOTE_SHORTEN_ENDPOINT = "/notes/shorten";
+      const MAN_UTD_TEAM_ID = "360";
+      const MAN_UTD_CORE_API_BASE = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/eng.1";
       let selectedDate = formatDateToday();
       let saveQueue = Promise.resolve();
+      let fixtures = [];
+      let fixturesLoadingPromise = null;
+      let fixturesLoaded = false;
+      let selectedNoteText = "";
+      let selectedNotePoints = [];
+      let noteSaveTimer = null;
+      let noteRecognition = null;
+      let noteRecognitionSupported = false;
+      let noteRecognitionActive = false;
+      let noteAddPointBusy = false;
 
       function emptyDoneState() {
         return {
@@ -443,7 +694,17 @@
         };
       }
 
+      function emptyScreenTimeState() {
+        return {
+          totalMinutes: null,
+          pickups: null,
+          source: "",
+          hasData: false
+        };
+      }
+
       let selectedDone = emptyDoneState();
+      let selectedScreenTime = emptyScreenTimeState();
 
       function formatDateToday() {
         return new Date().toISOString().slice(0, 10);
@@ -452,6 +713,269 @@
       function formatDateLabel(dateIso) {
         const [year, month, day] = dateIso.split("-");
         return `${day}.${month}.${year}`;
+      }
+
+      function parseLocalIsoDate(dateIso) {
+        const [year, month, day] = String(dateIso || "").split("-").map((value) => Number(value));
+        if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+          return null;
+        }
+
+        const parsed = new Date(year, month - 1, day);
+        if (
+          parsed.getFullYear() !== year ||
+          parsed.getMonth() !== month - 1 ||
+          parsed.getDate() !== day
+        ) {
+          return null;
+        }
+
+        return parsed;
+      }
+
+      function formatWeekdayAndDateLabel(dateIso) {
+        const parsed = parseLocalIsoDate(dateIso);
+        if (!parsed) {
+          return "";
+        }
+
+        const weekday = new Intl.DateTimeFormat("nb-NO", {
+          weekday: "long"
+        }).format(parsed);
+        const capitalizedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+        return capitalizedWeekday;
+      }
+
+      function workoutPlanForDate(dateIso) {
+        const parsed = parseLocalIsoDate(dateIso);
+        if (!parsed) {
+          return null;
+        }
+
+        const weekday = parsed.getDay();
+        const workout = WORKOUT_PLAN_BY_WEEKDAY[weekday];
+        if (!workout) {
+          return {
+            type: "rest",
+            text: "Planlagt økt: Hvile / restitusjon."
+          };
+        }
+
+        return {
+          type: "workout",
+          text: `Planlagt økt: ${workout}.`
+        };
+      }
+
+      function formatFixtureTime(dateIso) {
+        const parsed = new Date(dateIso);
+        if (Number.isNaN(parsed.getTime())) {
+          return "";
+        }
+
+        return new Intl.DateTimeFormat("nb-NO", {
+          hour: "2-digit",
+          minute: "2-digit"
+        }).format(parsed);
+      }
+
+      function currentPremierLeagueSeasonStartYear(date = new Date()) {
+        const month = date.getUTCMonth();
+        const year = date.getUTCFullYear();
+        return month >= 6 ? year : year - 1;
+      }
+
+      function seasonEventsIndexUrl(seasonStartYear) {
+        return `${MAN_UTD_CORE_API_BASE}/seasons/${seasonStartYear}/types/1/teams/${MAN_UTD_TEAM_ID}/events?limit=200`;
+      }
+
+      function coreEventUrl(eventId) {
+        return `${MAN_UTD_CORE_API_BASE}/events/${encodeURIComponent(eventId)}?lang=en&region=us`;
+      }
+
+      function eventIdFromRef(ref) {
+        const match = String(ref || "").match(/\/events\/(\d+)/);
+        return match ? match[1] : null;
+      }
+
+      function parseFixtureDetails(event) {
+        const fullName = typeof event.name === "string" ? event.name : "";
+        const awayPrefix = "Manchester United at ";
+        const homeSuffix = " at Manchester United";
+
+        if (fullName.startsWith(awayPrefix)) {
+          return {
+            opponent: fullName.slice(awayPrefix.length).trim() || "Motstander",
+            isHome: false
+          };
+        }
+
+        if (fullName.endsWith(homeSuffix)) {
+          return {
+            opponent: fullName.slice(0, -homeSuffix.length).trim() || "Motstander",
+            isHome: true
+          };
+        }
+
+        const shortName = typeof event.shortName === "string" ? event.shortName : "";
+        const [left, right] = shortName.split("@").map((part) => (part ? part.trim() : ""));
+        if (left && right) {
+          if (left === "MAN") {
+            return { opponent: right, isHome: false };
+          }
+          if (right === "MAN") {
+            return { opponent: left, isHome: true };
+          }
+        }
+
+        return { opponent: "Motstander", isHome: true };
+      }
+
+      function tournamentNameFromEvent(event) {
+        const leagueRef = event && event.league && event.league.$ref;
+        if (typeof leagueRef === "string" && leagueRef.includes("/leagues/eng.1")) {
+          return "Premier League";
+        }
+
+        return "Premier League";
+      }
+
+      function normalizeCoreEvent(event) {
+        if (!event || typeof event.date !== "string") {
+          return null;
+        }
+
+        const details = parseFixtureDetails(event);
+        return {
+          id: String(event.id || `${event.date}-${event.shortName || "fixture"}`),
+          date: event.date.slice(0, 10),
+          kickoffIso: event.date,
+          opponent: details.opponent,
+          isHome: details.isHome,
+          tournament: tournamentNameFromEvent(event)
+        };
+      }
+
+      async function fetchFixturesForSeason(seasonStartYear) {
+        const indexResponse = await fetch(seasonEventsIndexUrl(seasonStartYear), { cache: "no-store" });
+        if (!indexResponse.ok) {
+          throw new Error(`Kunne ikke hente kampliste for sesong ${seasonStartYear}`);
+        }
+
+        const indexBody = await indexResponse.json();
+        const items = Array.isArray(indexBody.items) ? indexBody.items : [];
+        const eventIds = Array.from(
+          new Set(
+            items
+              .map((item) => eventIdFromRef(item && item.$ref))
+              .filter(Boolean)
+          )
+        );
+
+        if (eventIds.length === 0) {
+          return [];
+        }
+
+        const eventResults = await Promise.allSettled(
+          eventIds.map(async (eventId) => {
+            const response = await fetch(coreEventUrl(eventId), { cache: "no-store" });
+            if (!response.ok) {
+              throw new Error(`Kunne ikke hente kamp ${eventId}`);
+            }
+            return response.json();
+          })
+        );
+
+        return eventResults
+          .filter((result) => result.status === "fulfilled")
+          .map((result) => normalizeCoreEvent(result.value))
+          .filter(Boolean)
+          .sort((a, b) => new Date(a.kickoffIso) - new Date(b.kickoffIso));
+      }
+
+      function renderFixtures() {
+        const quickList = document.getElementById("fixtureQuickList");
+        if (!quickList) {
+          return;
+        }
+
+        quickList.className = "fixture-quick-list";
+        quickList.replaceChildren();
+
+        const workoutPlan = workoutPlanForDate(selectedDate);
+        if (workoutPlan) {
+          const workoutItem = document.createElement("li");
+          workoutItem.textContent = workoutPlan.text;
+          quickList.appendChild(workoutItem);
+          quickList.classList.add("match");
+        }
+
+        if (!fixturesLoaded) {
+          return;
+        }
+
+        const selectedDateFixtures = fixtures
+          .filter((fixture) => fixture.date === selectedDate)
+          .sort((a, b) => new Date(a.kickoffIso) - new Date(b.kickoffIso));
+
+        if (selectedDateFixtures.length === 0) {
+          return;
+        }
+
+        selectedDateFixtures.forEach((fixture) => {
+          const kickoff = formatFixtureTime(fixture.kickoffIso);
+          const homeAway = fixture.isHome ? "hjemme" : "borte";
+          const item = document.createElement("li");
+
+          if (kickoff) {
+            item.textContent = `Observasjon: Manchester United spiller kl. ${kickoff} mot ${fixture.opponent} (${homeAway}, ${fixture.tournament}).`;
+          } else {
+            item.textContent = `Observasjon: Manchester United spiller mot ${fixture.opponent} (${homeAway}, ${fixture.tournament}).`;
+          }
+
+          quickList.appendChild(item);
+        });
+
+        quickList.classList.add("match");
+      }
+
+      async function loadManchesterUnitedFixtures() {
+        if (fixturesLoadingPromise) {
+          return fixturesLoadingPromise;
+        }
+
+        renderFixtures();
+
+        fixturesLoadingPromise = (async () => {
+          try {
+            const seasonStartYear = currentPremierLeagueSeasonStartYear();
+            const seasonCandidates = Array.from(new Set([seasonStartYear, seasonStartYear - 1, seasonStartYear + 1]));
+            let loadedFixtures = [];
+
+            for (const season of seasonCandidates) {
+              const seasonFixtures = await fetchFixturesForSeason(season);
+              if (seasonFixtures.length > 0) {
+                loadedFixtures = seasonFixtures;
+                break;
+              }
+            }
+
+            if (loadedFixtures.length === 0) {
+              throw new Error("Ingen kamper funnet");
+            }
+
+            fixtures = loadedFixtures;
+            fixturesLoaded = true;
+          } catch (_) {
+            fixtures = [];
+            fixturesLoaded = false;
+          } finally {
+            fixturesLoadingPromise = null;
+            renderFixtures();
+          }
+        })();
+
+        return fixturesLoadingPromise;
       }
 
       function setStatus(message, type) {
@@ -468,30 +992,99 @@
         return TASKS.reduce((sum, task) => sum + (doneState[task] === 1 ? 1 : 0), 0);
       }
 
+      function toNonNegativeIntegerOrNull(value) {
+        return Number.isInteger(value) && value >= 0 ? value : null;
+      }
+
+      function formatMinutes(totalMinutes) {
+        const value = toNonNegativeIntegerOrNull(totalMinutes);
+        if (value === null) {
+          return "Ikke registrert";
+        }
+
+        const hours = Math.floor(value / 60);
+        const minutes = value % 60;
+
+        if (hours === 0) {
+          return `${minutes} min`;
+        }
+
+        if (minutes === 0) {
+          return `${hours} t`;
+        }
+
+        return `${hours} t ${minutes} min`;
+      }
+
       function updateDateLabel() {
         const today = formatDateToday();
         const suffix = selectedDate === today ? " (i dag)" : "";
         const formattedDate = `${formatDateLabel(selectedDate)}${suffix}`;
 
         const routineLabel = document.getElementById("dateLabel");
-        const calendarLabel = document.getElementById("calendarDateLabel");
         const dashboardDate = document.getElementById("dashboardDate");
+        const dashboardDateObs = document.getElementById("dashboardDateObs");
+        const calendarDateLabel = document.getElementById("calendarDateLabel");
 
         routineLabel.textContent = `Viser dato: ${formattedDate}`;
-        calendarLabel.textContent = `Du redigerer: ${formattedDate}`;
         dashboardDate.textContent = formattedDate;
+        if (calendarDateLabel) {
+          calendarDateLabel.textContent = formatWeekdayAndDateLabel(selectedDate);
+        }
+        if (dashboardDateObs) {
+          dashboardDateObs.textContent =
+            selectedDate === today
+              ? "Observasjon: Dette er dagens dato, og visningen viser dagens registreringer."
+              : "Observasjon: Dette er valgt dato, og visningen viser registreringer for denne dagen.";
+        }
+        renderFixtures();
       }
 
       function updateDashboard() {
         const doneCount = countDone(selectedDone);
         const dashboardProgress = document.getElementById("dashboardProgress");
-        const dashboardHint = document.getElementById("dashboardHint");
+        const dashboardProgressObs = document.getElementById("dashboardProgressObs");
+        const dashboardScreenTime = document.getElementById("dashboardScreenTime");
+        const dashboardScreenTimeObs = document.getElementById("dashboardScreenTimeObs");
+        const remaining = TASKS.length - doneCount;
 
         dashboardProgress.textContent = `${doneCount}/${TASKS.length}`;
-        dashboardHint.textContent =
-          doneCount === TASKS.length
-            ? "Alle rutiner er fullført."
-            : `${TASKS.length - doneCount} rutiner gjenstår.`;
+        if (dashboardProgressObs) {
+          dashboardProgressObs.textContent =
+            doneCount === TASKS.length
+              ? `Observasjon: Alle ${TASKS.length} av ${TASKS.length} rutiner er fullført for valgt dato.`
+              : `Observasjon: ${doneCount} av ${TASKS.length} rutiner er fullført. ${remaining} gjenstår.`;
+        }
+
+        if (dashboardScreenTime) {
+          dashboardScreenTime.textContent = formatMinutes(selectedScreenTime.totalMinutes);
+        }
+
+        if (dashboardScreenTimeObs) {
+          if (!selectedScreenTime.hasData || selectedScreenTime.totalMinutes === null) {
+            dashboardScreenTimeObs.textContent = "Observasjon: Ingen skjermtid registrert for valgt dato ennå.";
+          } else {
+            const durationText = formatMinutes(selectedScreenTime.totalMinutes);
+            const pickupsText =
+              selectedScreenTime.pickups === null ? "" : `, ${selectedScreenTime.pickups} opplåsinger`;
+            const sourceText = selectedScreenTime.source ? ` (kilde: ${selectedScreenTime.source})` : "";
+            dashboardScreenTimeObs.textContent = `Observasjon: ${durationText}${pickupsText}${sourceText}.`;
+          }
+        }
+      }
+
+      function syncNoteInput() {
+        const noteInput = document.getElementById("dailyNote");
+        if (!noteInput) {
+          return;
+        }
+
+        if (noteInput.value !== selectedNoteText) {
+          noteInput.value = selectedNoteText;
+        }
+
+        renderNotePointActions();
+        updateAddPointButton();
       }
 
       function applySelectedState() {
@@ -531,29 +1124,54 @@
               omega3: body.omega3 === 1 ? 1 : 0,
               bed: body.bed === 1 ? 1 : 0
             };
+            setNoteFromRaw(typeof body.note === "string" ? body.note : "");
           } else {
             selectedDone = emptyDoneState();
+            setNoteFromRaw("");
           }
         } catch (_) {
           selectedDone = emptyDoneState();
+          setNoteFromRaw("");
+        }
+
+        try {
+          const response = await fetch(`/screen-time/today?date=${encodeURIComponent(selectedDate)}`);
+          if (response.ok) {
+            const body = await response.json();
+            const totalMinutes = toNonNegativeIntegerOrNull(body.total_minutes);
+            const pickups = toNonNegativeIntegerOrNull(body.pickups);
+
+            selectedScreenTime = {
+              totalMinutes,
+              pickups,
+              source: typeof body.source === "string" ? body.source : "",
+              hasData: body.has_data === true && totalMinutes !== null
+            };
+          } else {
+            selectedScreenTime = emptyScreenTimeState();
+          }
+        } catch (_) {
+          selectedScreenTime = emptyScreenTimeState();
         }
 
         updateDateLabel();
         applySelectedState();
+        syncNoteInput();
       }
 
-      function buildPayload(date, doneState) {
+      function buildPayload(date, doneState, note) {
         return {
           date,
           dishwasher: doneState.dishwasher === 1 ? 1 : 0,
           creatine: doneState.creatine === 1 ? 1 : 0,
           omega3: doneState.omega3 === 1 ? 1 : 0,
-          bed: doneState.bed === 1 ? 1 : 0
+          bed: doneState.bed === 1 ? 1 : 0,
+          note: typeof note === "string" ? note : ""
         };
       }
 
-      async function persistEntry(date, doneState) {
-        const payload = buildPayload(date, doneState);
+      async function persistEntry(date, doneState, note) {
+        const payload = buildPayload(date, doneState, note);
 
         try {
           const response = await fetch("/entries", {
@@ -583,12 +1201,334 @@
       function queueAutoSave() {
         const dateSnapshot = selectedDate;
         const doneSnapshot = { ...selectedDone };
+        const noteSnapshot = composeNoteContent(selectedNotePoints, selectedNoteText);
 
         if (selectedDate === dateSnapshot) {
           setStatus("Lagrer...", "pending");
         }
 
-        saveQueue = saveQueue.then(() => persistEntry(dateSnapshot, doneSnapshot));
+        saveQueue = saveQueue.then(() => persistEntry(dateSnapshot, doneSnapshot, noteSnapshot));
+      }
+
+      function queueNoteSaveDebounced() {
+        if (noteSaveTimer) {
+          clearTimeout(noteSaveTimer);
+        }
+
+        noteSaveTimer = window.setTimeout(() => {
+          noteSaveTimer = null;
+          queueAutoSave();
+        }, NOTE_SAVE_DELAY_MS);
+      }
+
+      function flushPendingNoteSave() {
+        if (!noteSaveTimer) {
+          return;
+        }
+
+        clearTimeout(noteSaveTimer);
+        noteSaveTimer = null;
+        queueAutoSave();
+      }
+
+      function noteLines(value) {
+        return String(value || "")
+          .replace(/\r\n/g, "\n")
+          .split("\n");
+      }
+
+      function isPointLine(line) {
+        return /^\s*[•*-]\s*/.test(String(line || ""));
+      }
+
+      function splitNoteContent(value) {
+        const points = [];
+        const textLines = [];
+
+        noteLines(value).forEach((line) => {
+          const rawLine = String(line || "");
+          if (isPointLine(rawLine)) {
+            const pointText = rawLine.replace(/^\s*[•*-]\s*/, "").trim();
+            if (pointText !== "") {
+              points.push(pointText);
+            }
+            return;
+          }
+
+          textLines.push(rawLine);
+        });
+
+        while (textLines.length > 0 && textLines[0].trim() === "") {
+          textLines.shift();
+        }
+        while (textLines.length > 0 && textLines[textLines.length - 1].trim() === "") {
+          textLines.pop();
+        }
+
+        return {
+          points,
+          text: textLines.join("\n")
+        };
+      }
+
+      function composeNoteContent(points, text) {
+        const pointLines = (Array.isArray(points) ? points : [])
+          .map((point) => String(point || "").trim())
+          .filter(Boolean)
+          .map((point) => `• ${point}`);
+        const textValue = String(text || "").replace(/\r\n/g, "\n").trim();
+
+        if (pointLines.length > 0 && textValue !== "") {
+          return `${pointLines.join("\n")}\n\n${textValue}`;
+        }
+
+        if (pointLines.length > 0) {
+          return pointLines.join("\n");
+        }
+
+        return textValue;
+      }
+
+      function setNoteFromRaw(rawNote) {
+        const parts = splitNoteContent(rawNote);
+        selectedNotePoints = parts.points;
+        selectedNoteText = parts.text;
+      }
+
+      function normalizePointText(value) {
+        const cleaned = String(value || "").replace(/\s+/g, " ").trim();
+        return cleaned.replace(/^[•*-]\s*/, "").trim();
+      }
+
+      function updateAddPointButton() {
+        const button = document.getElementById("noteAddPointButton");
+        if (!button) {
+          return;
+        }
+
+        button.disabled = noteAddPointBusy || selectedNoteText.trim() === "";
+      }
+
+      async function shortenNoteText(value) {
+        const input = normalizePointText(value);
+        if (!input) {
+          return "";
+        }
+
+        try {
+          const response = await fetch(NOTE_SHORTEN_ENDPOINT, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ text: input })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Korting feilet (${response.status})`);
+          }
+
+          const body = await response.json();
+          const shortText = normalizePointText(body && typeof body.short_text === "string" ? body.short_text : "");
+          return shortText || input;
+        } catch (_) {
+          return input;
+        }
+      }
+
+      function renderNotePointActions() {
+        const container = document.getElementById("notePointActions");
+        if (!container) {
+          return;
+        }
+
+        container.replaceChildren();
+        if (selectedNotePoints.length === 0) {
+          return;
+        }
+
+        const list = document.createElement("ul");
+        list.className = "note-point-list";
+
+        selectedNotePoints.forEach((pointText, pointIndex) => {
+          const item = document.createElement("li");
+          item.className = "note-point-item";
+
+          const removeButton = document.createElement("button");
+          removeButton.type = "button";
+          removeButton.className = "note-point-remove";
+          removeButton.setAttribute("aria-label", "Fjern punkt");
+          removeButton.title = "Fjern punkt";
+          removeButton.dataset.removePointIndex = String(pointIndex);
+          removeButton.textContent = "×";
+
+          const text = document.createElement("p");
+          text.className = "note-point-text";
+          text.textContent = pointText;
+
+          item.appendChild(removeButton);
+          item.appendChild(text);
+          list.appendChild(item);
+        });
+
+        container.appendChild(list);
+      }
+
+      function removeNotePointByIndex(pointIndex) {
+        if (!Number.isInteger(pointIndex) || pointIndex < 0 || pointIndex >= selectedNotePoints.length) {
+          return;
+        }
+
+        selectedNotePoints.splice(pointIndex, 1);
+        renderNotePointActions();
+        queueAutoSave();
+      }
+
+      async function addTypedTextToPoints() {
+        const noteInput = document.getElementById("dailyNote");
+        if (!noteInput) {
+          return;
+        }
+
+        if (noteAddPointBusy) {
+          return;
+        }
+
+        const rawLines = selectedNoteText.replace(/\r\n/g, "\n").split("\n");
+        const inputLines = rawLines.map((line) => normalizePointText(line)).filter(Boolean);
+        if (inputLines.length === 0) {
+          updateAddPointButton();
+          return;
+        }
+
+        noteAddPointBusy = true;
+        updateAddPointButton();
+        try {
+          const shortenedLines = await Promise.all(inputLines.map((line) => shortenNoteText(line)));
+          const newPoints = shortenedLines.map((line) => normalizePointText(line)).filter(Boolean);
+          if (newPoints.length === 0) {
+            return;
+          }
+
+          selectedNotePoints.push(...newPoints);
+          selectedNoteText = "";
+          noteInput.value = "";
+          renderNotePointActions();
+          queueAutoSave();
+        } finally {
+          noteAddPointBusy = false;
+          updateAddPointButton();
+        }
+      }
+
+      function updateNoteVoiceButton() {
+        const button = document.getElementById("noteVoiceButton");
+        if (!button) {
+          return;
+        }
+
+        if (!noteRecognitionSupported) {
+          button.setAttribute("aria-label", "Mikrofon ikke tilgjengelig");
+          button.title = "Mikrofon ikke tilgjengelig";
+          button.disabled = true;
+          button.classList.remove("active");
+          return;
+        }
+
+        button.disabled = false;
+        if (noteRecognitionActive) {
+          button.classList.add("active");
+          button.setAttribute("aria-label", "Stopp taleopptak");
+          button.title = "Stopp taleopptak";
+        } else {
+          button.classList.remove("active");
+          button.setAttribute("aria-label", "Snakk inn notat");
+          button.title = "Snakk inn notat";
+        }
+      }
+
+      async function appendVoiceTextToNote(text) {
+        const cleanText = typeof text === "string" ? text.replace(/\s+/g, " ").trim() : "";
+        if (!cleanText) {
+          return;
+        }
+
+        const shortText = await shortenNoteText(cleanText);
+        if (!shortText) {
+          return;
+        }
+
+        selectedNotePoints.push(shortText);
+        renderNotePointActions();
+        updateAddPointButton();
+        queueNoteSaveDebounced();
+      }
+
+      function setupNoteVoiceInput() {
+        const button = document.getElementById("noteVoiceButton");
+        if (!button) {
+          return;
+        }
+
+        const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognitionCtor) {
+          noteRecognitionSupported = false;
+          updateNoteVoiceButton();
+          return;
+        }
+
+        noteRecognitionSupported = true;
+        noteRecognition = new SpeechRecognitionCtor();
+        noteRecognition.lang = "nb-NO";
+        noteRecognition.continuous = false;
+        noteRecognition.interimResults = false;
+
+        noteRecognition.onstart = () => {
+          noteRecognitionActive = true;
+          updateNoteVoiceButton();
+        };
+
+        noteRecognition.onend = () => {
+          noteRecognitionActive = false;
+          updateNoteVoiceButton();
+          flushPendingNoteSave();
+        };
+
+        noteRecognition.onerror = () => {
+          noteRecognitionActive = false;
+          updateNoteVoiceButton();
+        };
+
+        noteRecognition.onresult = (event) => {
+          let finalText = "";
+          for (let index = event.resultIndex; index < event.results.length; index += 1) {
+            const result = event.results[index];
+            if (result && result.isFinal && result[0] && typeof result[0].transcript === "string") {
+              finalText += result[0].transcript;
+            }
+          }
+          void appendVoiceTextToNote(finalText);
+        };
+
+        button.addEventListener("click", () => {
+          if (!noteRecognitionSupported || !noteRecognition) {
+            return;
+          }
+
+          if (noteRecognitionActive) {
+            noteRecognition.stop();
+            return;
+          }
+
+          try {
+            noteRecognition.start();
+          } catch (_) {
+            noteRecognitionActive = false;
+            updateNoteVoiceButton();
+          }
+        });
+
+        updateNoteVoiceButton();
       }
 
       function setupTaskToggles() {
@@ -606,17 +1546,83 @@
         });
       }
 
+      function setupNoteInput() {
+        const noteInput = document.getElementById("dailyNote");
+        if (!noteInput) {
+          return;
+        }
+
+        noteInput.addEventListener("input", () => {
+          selectedNoteText = noteInput.value;
+          renderNotePointActions();
+          updateAddPointButton();
+          queueNoteSaveDebounced();
+        });
+
+        noteInput.addEventListener("blur", () => {
+          selectedNoteText = noteInput.value;
+          renderNotePointActions();
+          updateAddPointButton();
+          flushPendingNoteSave();
+        });
+      }
+
+      function setupNoteAddPoint() {
+        const addButton = document.getElementById("noteAddPointButton");
+        if (!addButton) {
+          return;
+        }
+
+        addButton.addEventListener("click", () => {
+          void addTypedTextToPoints();
+        });
+
+        updateAddPointButton();
+      }
+
+      function setupNotePointActions() {
+        const container = document.getElementById("notePointActions");
+        if (!container) {
+          return;
+        }
+
+        container.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) {
+            return;
+          }
+
+          const button = target.closest("[data-remove-point-index]");
+          if (!button) {
+            return;
+          }
+
+          const pointIndex = Number(button.getAttribute("data-remove-point-index"));
+          if (!Number.isInteger(pointIndex)) {
+            return;
+          }
+
+          removeNotePointByIndex(pointIndex);
+        });
+
+        renderNotePointActions();
+      }
+
       function setupDateControls() {
         const datePicker = document.getElementById("datePicker");
 
         datePicker.value = selectedDate;
-        datePicker.max = formatDateToday();
 
         datePicker.addEventListener("change", async () => {
           if (!datePicker.value) {
             return;
           }
 
+          if (noteRecognition && noteRecognitionActive) {
+            noteRecognition.stop();
+          }
+          flushPendingNoteSave();
+          await saveQueue;
           selectedDate = datePicker.value;
           setStatus("", "");
           await loadSelectedDateState();
@@ -721,8 +1727,13 @@
       setupTheme();
       setupDateControls();
       setupTaskToggles();
+      setupNoteInput();
+      setupNoteAddPoint();
+      setupNotePointActions();
+      setupNoteVoiceInput();
       setupMobilePanelNavigation();
       loadSelectedDateState();
+      loadManchesterUnitedFixtures();
     </script>
   </body>
 </html>
