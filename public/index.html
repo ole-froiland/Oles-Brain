@@ -179,6 +179,111 @@
         margin-bottom: 12px;
       }
 
+      .bank-panel {
+        margin-bottom: 12px;
+      }
+
+      .bank-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .bank-action-button {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text);
+        background: var(--surface);
+        cursor: pointer;
+        transition: transform 120ms ease, border-color 120ms ease;
+      }
+
+      .bank-action-button:hover {
+        transform: translateY(-1px);
+        border-color: var(--accent);
+      }
+
+      .bank-action-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .bank-status {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      .bank-status.success {
+        color: var(--accent);
+      }
+
+      .bank-status.error {
+        color: var(--error);
+      }
+
+      .bank-output {
+        margin-top: 8px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px;
+        background: var(--surface-soft);
+        max-height: 230px;
+        overflow: auto;
+      }
+
+      .bank-output:empty {
+        display: none;
+      }
+
+      .bank-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 6px;
+      }
+
+      .bank-list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 7px 8px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .bank-list-copy {
+        min-width: 0;
+      }
+
+      .bank-list-title {
+        margin: 0;
+        font-size: 0.84rem;
+        font-weight: 700;
+      }
+
+      .bank-list-meta {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.78rem;
+        line-height: 1.3;
+      }
+
+      .bank-list-amount {
+        margin: 0;
+        flex-shrink: 0;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+
       .dash-card {
         border: 1px solid var(--border);
         border-radius: 12px;
@@ -555,6 +660,31 @@
         margin-top: 10px;
       }
 
+      .screen-time-item-button {
+        width: 100%;
+        justify-content: space-between;
+        text-align: left;
+        font: inherit;
+        color: var(--text);
+      }
+
+      .screen-time-item-button:hover {
+        border-color: var(--accent);
+        background: var(--surface-soft);
+      }
+
+      .screen-time-item-button:disabled {
+        opacity: 0.75;
+        cursor: default;
+      }
+
+      .screen-time-item-value {
+        margin-left: 12px;
+        color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+
       .item {
         display: flex;
         align-items: center;
@@ -778,6 +908,14 @@
               <p id="dashboardScreenTimeObs" class="dash-observation"></p>
             </article>
           </div>
+          <article class="dash-card bank-panel">
+            <div class="bank-actions">
+              <button id="bankAccountsButton" class="bank-action-button" type="button">Konto</button>
+              <button id="bankTransactionsButton" class="bank-action-button" type="button">Transaksjoner</button>
+            </div>
+            <p id="bankStatus" class="bank-status">Trykk Konto for å hente kontooversikt.</p>
+            <div id="bankOutput" class="bank-output" aria-live="polite"></div>
+          </article>
           <article class="dash-card note-card">
             <div class="note-header">
               <label class="note-label" for="dailyNote">Huskeliste</label>
@@ -852,6 +990,11 @@
               <input id="workout" type="checkbox" />
               Trening
             </label>
+
+            <button id="screenTimeButton" class="item screen-time-item-button" type="button">
+              <span>Skjermtid</span>
+              <span id="screenTimeItemValue" class="screen-time-item-value">Ikke registrert</span>
+            </button>
           </section>
 
           <p id="status" class="status" role="status" aria-live="polite"></p>
@@ -914,6 +1057,8 @@
       const DEFAULT_SHEETS_URL =
         "https://docs.google.com/spreadsheets/d/15KvATxIIEMW7877aUDdlIQYddclJdIzb07NJc3ywW0o/edit?gid=2001617319#gid=2001617319";
       const NOTE_SHORTEN_ENDPOINT = "/notes/shorten";
+      const BANK_ACCOUNTS_ENDPOINT = "/bank/accounts";
+      const BANK_TRANSACTIONS_ENDPOINT = "/bank/transactions";
       const MAN_UTD_TEAM_ID = "360";
       const MAN_UTD_CORE_API_BASE = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/eng.1";
       let selectedDate = formatDateToday();
@@ -928,6 +1073,10 @@
       let noteRecognitionSupported = false;
       let noteRecognitionActive = false;
       let noteAddPointBusy = false;
+      let screenTimeSaveBusy = false;
+      let bankBusy = false;
+      let bankSelectedAccountKey = "";
+      let bankAccounts = [];
 
       function emptyDoneState() {
         return {
@@ -1398,6 +1547,98 @@
         status.className = `status ${type || ""}`.trim();
       }
 
+      function parseNonNegativeIntegerInput(value) {
+        const trimmed = String(value || "").trim();
+        if (trimmed === "" || !/^\d+$/.test(trimmed)) {
+          return null;
+        }
+
+        const parsed = Number.parseInt(trimmed, 10);
+        return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+      }
+
+      function splitMinutes(totalMinutes) {
+        const value = toNonNegativeIntegerOrNull(totalMinutes);
+        if (value === null) {
+          return { hours: "", minutes: "" };
+        }
+
+        return {
+          hours: String(Math.floor(value / 60)),
+          minutes: String(value % 60)
+        };
+      }
+
+      function promptForScreenTimeTotalMinutes() {
+        const defaults = splitMinutes(selectedScreenTime.totalMinutes);
+        const hoursInput = window.prompt("Skjermtid: antall timer", defaults.hours);
+        if (hoursInput === null) {
+          return null;
+        }
+
+        const hours = parseNonNegativeIntegerInput(hoursInput);
+        if (hours === null) {
+          window.alert("Ugyldig antall timer. Skriv et heltall (0 eller høyere).");
+          return null;
+        }
+
+        const minutesInput = window.prompt("Skjermtid: antall minutter (0-59)", defaults.minutes);
+        if (minutesInput === null) {
+          return null;
+        }
+
+        const minutes = parseNonNegativeIntegerInput(minutesInput);
+        if (minutes === null || minutes > 59) {
+          window.alert("Ugyldig antall minutter. Bruk et heltall fra 0 til 59.");
+          return null;
+        }
+
+        return hours * 60 + minutes;
+      }
+
+      function setScreenTimeButtonBusy(isBusy) {
+        screenTimeSaveBusy = isBusy;
+        const button = document.getElementById("screenTimeButton");
+        if (!button) {
+          return;
+        }
+
+        button.disabled = isBusy;
+      }
+
+      async function persistManualScreenTime(totalMinutes) {
+        const payload = {
+          date: selectedDate,
+          total_minutes: totalMinutes,
+          source: "manual-ui"
+        };
+
+        if (toNonNegativeIntegerOrNull(selectedScreenTime.pickups) !== null) {
+          payload.pickups = selectedScreenTime.pickups;
+        }
+
+        const response = await fetch("/screen-time/manual", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(body.error || "Kunne ikke lagre skjermtid");
+        }
+
+        const storedTotalMinutes = toNonNegativeIntegerOrNull(body.total_minutes);
+        const storedPickups = toNonNegativeIntegerOrNull(body.pickups);
+
+        selectedScreenTime = {
+          totalMinutes: storedTotalMinutes,
+          pickups: storedPickups,
+          source: typeof body.source === "string" ? body.source : "",
+          hasData: storedTotalMinutes !== null
+        };
+      }
+
       function readSheetsUrlFromStorage() {
         try {
           return String(localStorage.getItem(SHEETS_URL_STORAGE_KEY) || "").trim();
@@ -1459,6 +1700,238 @@
         });
       }
 
+      function setBankBusy(isBusy) {
+        bankBusy = Boolean(isBusy);
+        const accountsButton = document.getElementById("bankAccountsButton");
+        const transactionsButton = document.getElementById("bankTransactionsButton");
+        if (accountsButton) {
+          accountsButton.disabled = bankBusy;
+        }
+        if (transactionsButton) {
+          transactionsButton.disabled = bankBusy;
+        }
+      }
+
+      function setBankStatus(message, type) {
+        const status = document.getElementById("bankStatus");
+        if (!status) {
+          return;
+        }
+
+        status.textContent = message;
+        status.className = `bank-status ${type || ""}`.trim();
+      }
+
+      function clearBankOutput() {
+        const output = document.getElementById("bankOutput");
+        if (!output) {
+          return null;
+        }
+
+        output.replaceChildren();
+        return output;
+      }
+
+      function formatCurrencyValue(amount, currencyCode) {
+        if (typeof amount !== "number" || Number.isNaN(amount)) {
+          return "Ukjent beløp";
+        }
+
+        try {
+          return new Intl.NumberFormat("nb-NO", {
+            style: "currency",
+            currency: typeof currencyCode === "string" && currencyCode ? currencyCode : "NOK"
+          }).format(amount);
+        } catch (_) {
+          return `${amount}`;
+        }
+      }
+
+      function formatBankDate(value) {
+        if (typeof value === "number" && Number.isFinite(value)) {
+          const parsed = new Date(value);
+          return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+        }
+
+        if (typeof value === "string" && value.trim() !== "") {
+          if (/^\d+$/.test(value.trim())) {
+            const parsedNumber = Number(value);
+            const parsedDate = new Date(parsedNumber);
+            if (!Number.isNaN(parsedDate.getTime())) {
+              return parsedDate.toISOString().slice(0, 10);
+            }
+          }
+
+          const parsed = new Date(value);
+          if (!Number.isNaN(parsed.getTime())) {
+            return parsed.toISOString().slice(0, 10);
+          }
+
+          return value;
+        }
+
+        return "";
+      }
+
+      function renderBankAccounts(accounts, selectedAccountKey) {
+        const output = clearBankOutput();
+        if (!output) {
+          return;
+        }
+
+        const list = document.createElement("ul");
+        list.className = "bank-list";
+
+        accounts.forEach((account) => {
+          const item = document.createElement("li");
+          item.className = "bank-list-item";
+
+          const copy = document.createElement("div");
+          copy.className = "bank-list-copy";
+
+          const title = document.createElement("p");
+          title.className = "bank-list-title";
+          const selectedMarker = account.key === selectedAccountKey ? " (valgt)" : "";
+          title.textContent = `${account.name || "Konto"}${selectedMarker}`;
+
+          const meta = document.createElement("p");
+          meta.className = "bank-list-meta";
+          meta.textContent = `${account.accountNumber || "Ukjent konto"} · ${account.key || ""}`;
+
+          const amount = document.createElement("p");
+          amount.className = "bank-list-amount";
+          amount.textContent = formatCurrencyValue(account.balance, account.currencyCode);
+
+          copy.appendChild(title);
+          copy.appendChild(meta);
+          item.appendChild(copy);
+          item.appendChild(amount);
+          list.appendChild(item);
+        });
+
+        output.appendChild(list);
+      }
+
+      function renderBankTransactions(transactions) {
+        const output = clearBankOutput();
+        if (!output) {
+          return;
+        }
+
+        const list = document.createElement("ul");
+        list.className = "bank-list";
+
+        transactions.forEach((transaction) => {
+          const item = document.createElement("li");
+          item.className = "bank-list-item";
+
+          const copy = document.createElement("div");
+          copy.className = "bank-list-copy";
+
+          const title = document.createElement("p");
+          title.className = "bank-list-title";
+          title.textContent = transaction.text || "Transaksjon";
+
+          const meta = document.createElement("p");
+          meta.className = "bank-list-meta";
+          const dateText = formatBankDate(transaction.date);
+          meta.textContent = dateText || "Ukjent dato";
+
+          const amount = document.createElement("p");
+          amount.className = "bank-list-amount";
+          amount.textContent = formatCurrencyValue(transaction.amount, transaction.currencyCode || "NOK");
+
+          copy.appendChild(title);
+          copy.appendChild(meta);
+          item.appendChild(copy);
+          item.appendChild(amount);
+          list.appendChild(item);
+        });
+
+        output.appendChild(list);
+      }
+
+      async function fetchJsonOrThrow(url) {
+        const response = await fetch(url, { cache: "no-store" });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error((body && (body.error || body.error_description)) || "Kunne ikke hente data");
+        }
+        return body;
+      }
+
+      async function loadBankAccounts() {
+        setBankBusy(true);
+        setBankStatus("Henter kontooversikt...", "");
+        try {
+          const body = await fetchJsonOrThrow(BANK_ACCOUNTS_ENDPOINT);
+          const accounts = Array.isArray(body.accounts) ? body.accounts : [];
+          if (accounts.length === 0) {
+            bankAccounts = [];
+            bankSelectedAccountKey = "";
+            clearBankOutput();
+            setBankStatus("Ingen kontoer funnet.", "error");
+            return;
+          }
+
+          bankAccounts = accounts;
+          bankSelectedAccountKey =
+            (typeof body.selected_account_key === "string" && body.selected_account_key) || accounts[0].key || "";
+          renderBankAccounts(accounts, bankSelectedAccountKey);
+          setBankStatus(`Kontoer lastet (${accounts.length}).`, "success");
+        } catch (error) {
+          clearBankOutput();
+          setBankStatus(error && error.message ? error.message : "Kunne ikke hente kontoer.", "error");
+        } finally {
+          setBankBusy(false);
+        }
+      }
+
+      async function loadBankTransactions() {
+        setBankBusy(true);
+        setBankStatus("Henter transaksjoner...", "");
+        try {
+          if (!bankSelectedAccountKey) {
+            await loadBankAccounts();
+          }
+
+          if (!bankSelectedAccountKey) {
+            throw new Error("Fant ingen konto å hente transaksjoner for.");
+          }
+
+          const query = new URLSearchParams({
+            accountKey: bankSelectedAccountKey,
+            rowLimit: "25"
+          });
+          const body = await fetchJsonOrThrow(`${BANK_TRANSACTIONS_ENDPOINT}?${query.toString()}`);
+          const transactions = Array.isArray(body.transactions) ? body.transactions : [];
+
+          renderBankTransactions(transactions);
+          setBankStatus(`Transaksjoner lastet (${transactions.length}).`, "success");
+        } catch (error) {
+          clearBankOutput();
+          setBankStatus(error && error.message ? error.message : "Kunne ikke hente transaksjoner.", "error");
+        } finally {
+          setBankBusy(false);
+        }
+      }
+
+      function setupBankPanel() {
+        const accountsButton = document.getElementById("bankAccountsButton");
+        const transactionsButton = document.getElementById("bankTransactionsButton");
+        if (!accountsButton || !transactionsButton) {
+          return;
+        }
+
+        accountsButton.addEventListener("click", () => {
+          void loadBankAccounts();
+        });
+
+        transactionsButton.addEventListener("click", () => {
+          void loadBankTransactions();
+        });
+      }
+
       function allDone(doneState, dateIso) {
         const requiredTasks = requiredTasksForDate(dateIso);
         return requiredTasks.every((task) => doneState[task] === 1);
@@ -1507,9 +1980,14 @@
       function updateDashboard() {
         const dashboardScreenTime = document.getElementById("dashboardScreenTime");
         const dashboardScreenTimeObs = document.getElementById("dashboardScreenTimeObs");
+        const screenTimeItemValue = document.getElementById("screenTimeItemValue");
 
         if (dashboardScreenTime) {
           dashboardScreenTime.textContent = formatMinutes(selectedScreenTime.totalMinutes);
+        }
+
+        if (screenTimeItemValue) {
+          screenTimeItemValue.textContent = formatMinutes(selectedScreenTime.totalMinutes);
         }
 
         if (dashboardScreenTimeObs) {
@@ -1942,6 +2420,41 @@
         });
       }
 
+      function setupScreenTimeButton() {
+        const button = document.getElementById("screenTimeButton");
+        if (!button) {
+          return;
+        }
+
+        button.addEventListener("click", async () => {
+          if (screenTimeSaveBusy) {
+            return;
+          }
+
+          const totalMinutes = promptForScreenTimeTotalMinutes();
+          if (totalMinutes === null) {
+            return;
+          }
+
+          setScreenTimeButtonBusy(true);
+          setStatus("Lagrer skjermtid...", "pending");
+
+          try {
+            await persistManualScreenTime(totalMinutes);
+            updateDashboard();
+            setStatus("Skjermtid lagret", "success");
+          } catch (error) {
+            const message =
+              error && typeof error.message === "string" && error.message.trim() !== ""
+                ? error.message
+                : "Kunne ikke lagre skjermtid";
+            setStatus(message, "error");
+          } finally {
+            setScreenTimeButtonBusy(false);
+          }
+        });
+      }
+
       function setupNoteInput() {
         const noteInput = document.getElementById("dailyNote");
         if (!noteInput) {
@@ -2166,11 +2679,13 @@
       setupDateControls();
       setupMonthCalendar();
       setupTaskToggles();
+      setupScreenTimeButton();
       setupNoteInput();
       setupNoteAddPoint();
       setupNotePointActions();
       setupNoteVoiceInput();
       setupSheetsButton();
+      setupBankPanel();
       setupMobilePanelNavigation();
       loadSelectedDateState();
       loadManchesterUnitedFixtures();

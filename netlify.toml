@@ -39,6 +39,12 @@
   force = true
 
 [[redirects]]
+  from = "/screen-time/manual"
+  to = "/.netlify/functions/screen-time-manual"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/screen-time/today"
   to = "/.netlify/functions/screen-time-today"
   status = 200
@@ -47,5 +53,17 @@
 [[redirects]]
   from = "/notes/shorten"
   to = "/.netlify/functions/note-shorten"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/bank/accounts"
+  to = "/.netlify/functions/bank-accounts"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/bank/transactions"
+  to = "/.netlify/functions/bank-transactions"
   status = 200
   force = true

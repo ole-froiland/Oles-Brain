@@ -10,6 +10,17 @@ const RESET_KEY = process.env.RESET_KEY || CSV_KEY;
 const SCREEN_TIME_KEY = process.env.SCREEN_TIME_KEY || CSV_KEY;
 const OPENAI_API_KEY = typeof process.env.OPENAI_API_KEY === "string" ? process.env.OPENAI_API_KEY.trim() : "";
 const OPENAI_NOTE_MODEL = process.env.OPENAI_NOTE_MODEL || "gpt-4.1-mini";
+const SB1_API_BASE =
+  typeof process.env.SB1_API_BASE === "string" && process.env.SB1_API_BASE.trim() !== ""
+    ? process.env.SB1_API_BASE.trim()
+    : "https://api.sparebank1.no";
+const SB1_CLIENT_ID = typeof process.env.SB1_CLIENT_ID === "string" ? process.env.SB1_CLIENT_ID.trim() : "";
+const SB1_CLIENT_SECRET =
+  typeof process.env.SB1_CLIENT_SECRET === "string" ? process.env.SB1_CLIENT_SECRET.trim() : "";
+const SB1_REFRESH_TOKEN =
+  typeof process.env.SB1_REFRESH_TOKEN === "string" ? process.env.SB1_REFRESH_TOKEN.trim() : "";
+const SB1_DEFAULT_ACCOUNT_KEY =
+  typeof process.env.SB1_DEFAULT_ACCOUNT_KEY === "string" ? process.env.SB1_DEFAULT_ACCOUNT_KEY.trim() : "";
 
 const dataDir = path.join(__dirname, "data");
 const dbPath = path.join(dataDir, "entries.db");
@@ -109,6 +120,90 @@ function todayDateString() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function isValidIsoDate(value) {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function isoDateDaysAgo(days) {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() - Number(days || 0));
+  return date.toISOString().slice(0, 10);
+}
+
+function parseBankRowLimit(value) {
+  const parsed = Number.parseInt(String(value || "").trim(), 10);
+  if (!Number.isInteger(parsed)) {
+    return 25;
+  }
+  return Math.max(1, Math.min(parsed, 200));
+}
+
+function ensureSb1Config() {
+  if (!SB1_CLIENT_ID || !SB1_CLIENT_SECRET || !SB1_REFRESH_TOKEN) {
+    const err = new Error("Manglende SB1-konfigurasjon på server");
+    err.statusCode = 503;
+    throw err;
+  }
+}
+
+async function issueSb1AccessTokenFromRefreshToken() {
+  ensureSb1Config();
+
+  const response = await fetch(`${SB1_API_BASE}/oauth/token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams({
+      client_id: SB1_CLIENT_ID,
+      client_secret: SB1_CLIENT_SECRET,
+      refresh_token: SB1_REFRESH_TOKEN,
+      grant_type: "refresh_token"
+    })
+  });
+
+  const body = await response.json().catch(() => ({}));
+  const accessToken = typeof body.access_token === "string" ? body.access_token : "";
+  if (!response.ok || !accessToken) {
+    const err = new Error(body.error_description || body.error || "Kunne ikke hente SB1-token");
+    err.statusCode = response.status || 502;
+    err.details = body;
+    throw err;
+  }
+
+  return accessToken;
+}
+
+async function fetchSb1Json(pathname, { accessToken, accept, queryParams }) {
+  const url = new URL(pathname, SB1_API_BASE);
+  if (queryParams && typeof queryParams === "object") {
+    Object.entries(queryParams).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === "") {
+        return;
+      }
+      url.searchParams.append(key, String(value));
+    });
+  }
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: accept
+    },
+    cache: "no-store"
+  });
+
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const err = new Error(body.error_description || body.error || "SB1-kall feilet");
+    err.statusCode = response.status || 502;
+    err.details = body;
+    throw err;
+  }
+
+  return body;
+}
+
 function workoutRequiredForDate(date) {
   if (!isValidDateString(date)) {
     return false;
@@ -173,6 +268,67 @@ function screenTimeKeyFromRequest(req) {
   }
 
   return "";
+}
+
+function upsertScreenTimeEntry(res, payload) {
+  const { date, totalMinutes, pickups, source } = payload;
+
+  db.get("SELECT id FROM screen_time_entries WHERE date = ? ORDER BY id DESC LIMIT 1", [date], (selectErr, row) => {
+    if (selectErr) {
+      res.status(500).json({ error: "Kunne ikke lagre skjermtid" });
+      return;
+    }
+
+    const respondSaved = (id, statusCode) => {
+      res.status(statusCode).json({
+        id,
+        date,
+        total_minutes: totalMinutes,
+        pickups,
+        source
+      });
+    };
+
+    const existingId = Number(row && row.id);
+    if (Number.isFinite(existingId)) {
+      db.run(
+        `
+          UPDATE screen_time_entries
+          SET total_minutes = ?, pickups = ?, source = ?, created_at = datetime('now')
+          WHERE id = ?
+        `,
+        [totalMinutes, pickups, source, existingId],
+        (updateErr) => {
+          if (updateErr) {
+            res.status(500).json({ error: "Kunne ikke lagre skjermtid" });
+            return;
+          }
+
+          db.run("DELETE FROM screen_time_entries WHERE date = ? AND id <> ?", [date, existingId], (deleteErr) => {
+            if (deleteErr) {
+              console.error("Kunne ikke rydde skjermtid-duplikater for dato:", date, deleteErr.message);
+            }
+
+            respondSaved(existingId, 200);
+          });
+        }
+      );
+      return;
+    }
+
+    db.run(
+      "INSERT INTO screen_time_entries (date, total_minutes, pickups, source) VALUES (?, ?, ?, ?)",
+      [date, totalMinutes, pickups, source],
+      function onInsert(insertErr) {
+        if (insertErr) {
+          res.status(500).json({ error: "Kunne ikke lagre skjermtid" });
+          return;
+        }
+
+        respondSaved(this.lastID, 201);
+      }
+    );
+  });
 }
 
 function escapeCsvValue(value) {
@@ -500,63 +656,19 @@ app.post("/screen-time", (req, res) => {
     return;
   }
 
-  const { date, totalMinutes, pickups, source } = normalized.value;
+  upsertScreenTimeEntry(res, normalized.value);
+});
 
-  db.get("SELECT id FROM screen_time_entries WHERE date = ? ORDER BY id DESC LIMIT 1", [date], (selectErr, row) => {
-    if (selectErr) {
-      res.status(500).json({ error: "Kunne ikke lagre skjermtid" });
-      return;
-    }
+app.post("/screen-time/manual", (req, res) => {
+  const normalized = normalizeScreenTimePayload(req.body);
+  if (normalized.error) {
+    res.status(400).json({ error: normalized.error });
+    return;
+  }
 
-    const respondSaved = (id, statusCode) => {
-      res.status(statusCode).json({
-        id,
-        date,
-        total_minutes: totalMinutes,
-        pickups,
-        source
-      });
-    };
-
-    const existingId = Number(row && row.id);
-    if (Number.isFinite(existingId)) {
-      db.run(
-        `
-          UPDATE screen_time_entries
-          SET total_minutes = ?, pickups = ?, source = ?, created_at = datetime('now')
-          WHERE id = ?
-        `,
-        [totalMinutes, pickups, source, existingId],
-        (updateErr) => {
-          if (updateErr) {
-            res.status(500).json({ error: "Kunne ikke lagre skjermtid" });
-            return;
-          }
-
-          db.run("DELETE FROM screen_time_entries WHERE date = ? AND id <> ?", [date, existingId], (deleteErr) => {
-            if (deleteErr) {
-              console.error("Kunne ikke rydde skjermtid-duplikater for dato:", date, deleteErr.message);
-            }
-
-            respondSaved(existingId, 200);
-          });
-        }
-      );
-      return;
-    }
-
-    db.run(
-      "INSERT INTO screen_time_entries (date, total_minutes, pickups, source) VALUES (?, ?, ?, ?)",
-      [date, totalMinutes, pickups, source],
-      function onInsert(insertErr) {
-        if (insertErr) {
-          res.status(500).json({ error: "Kunne ikke lagre skjermtid" });
-          return;
-        }
-
-        respondSaved(this.lastID, 201);
-      }
-    );
+  upsertScreenTimeEntry(res, {
+    ...normalized.value,
+    source: normalized.value.source || "manual-ui"
   });
 });
 
@@ -597,6 +709,116 @@ app.get("/screen-time/today", (req, res) => {
       });
     }
   );
+});
+
+app.get("/bank/accounts", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+
+  try {
+    const accessToken = await issueSb1AccessTokenFromRefreshToken();
+    const payload = await fetchSb1Json("/personal/banking/accounts", {
+      accessToken,
+      accept: "application/vnd.sparebank1.v5+json; charset=utf-8",
+      queryParams: { includeNokAccounts: "true" }
+    });
+
+    const accounts = Array.isArray(payload.accounts)
+      ? payload.accounts.map((account) => ({
+          key: account && typeof account.key === "string" ? account.key : "",
+          accountNumber: account && typeof account.accountNumber === "string" ? account.accountNumber : "",
+          name: account && typeof account.name === "string" ? account.name : "",
+          balance: typeof account.balance === "number" ? account.balance : null,
+          availableBalance: typeof account.availableBalance === "number" ? account.availableBalance : null,
+          currencyCode: account && typeof account.currencyCode === "string" ? account.currencyCode : "NOK",
+          type: account && typeof account.type === "string" ? account.type : ""
+        }))
+      : [];
+
+    const requestedAccountKey =
+      req.query && typeof req.query.accountKey === "string" ? req.query.accountKey.trim() : "";
+    const selectedAccountKey = requestedAccountKey || SB1_DEFAULT_ACCOUNT_KEY || (accounts[0] && accounts[0].key) || "";
+
+    res.status(200).json({
+      accounts,
+      selected_account_key: selectedAccountKey,
+      errors: Array.isArray(payload.errors) ? payload.errors : []
+    });
+  } catch (err) {
+    console.error("Kunne ikke hente bankkontoer:", err && err.message ? err.message : err);
+    res.status(err && err.statusCode ? err.statusCode : 500).json({
+      error: err && err.message ? err.message : "Kunne ikke hente bankkontoer"
+    });
+  }
+});
+
+app.get("/bank/transactions", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+
+  try {
+    const requestedAccountKey =
+      req.query && typeof req.query.accountKey === "string" ? req.query.accountKey.trim() : "";
+    const accountKey = requestedAccountKey || SB1_DEFAULT_ACCOUNT_KEY;
+    if (!accountKey) {
+      res.status(400).json({ error: "Mangler accountKey" });
+      return;
+    }
+
+    const fromDateRaw = req.query && typeof req.query.fromDate === "string" ? req.query.fromDate.trim() : "";
+    const toDateRaw = req.query && typeof req.query.toDate === "string" ? req.query.toDate.trim() : "";
+    const fromDate = isValidIsoDate(fromDateRaw) ? fromDateRaw : isoDateDaysAgo(30);
+    const toDate = isValidIsoDate(toDateRaw) ? toDateRaw : todayDateString();
+    const rowLimit = parseBankRowLimit(req.query && req.query.rowLimit);
+
+    const accessToken = await issueSb1AccessTokenFromRefreshToken();
+    const payload = await fetchSb1Json("/personal/banking/transactions", {
+      accessToken,
+      accept: "application/vnd.sparebank1.v1+json; charset=utf-8",
+      queryParams: {
+        accountKey,
+        fromDate,
+        toDate,
+        rowLimit: String(rowLimit)
+      }
+    });
+
+    const transactions = Array.isArray(payload.transactions)
+      ? payload.transactions.map((item) => ({
+          id: item && typeof item.id === "string" ? item.id : "",
+          date:
+            item && (typeof item.accountingDate === "number" || typeof item.accountingDate === "string")
+              ? item.accountingDate
+              : item && (typeof item.date === "number" || typeof item.date === "string")
+                ? item.date
+                : item && (typeof item.transactionDate === "number" || typeof item.transactionDate === "string")
+                  ? item.transactionDate
+                  : null,
+          text:
+            item && typeof item.text === "string"
+              ? item.text
+              : item && typeof item.description === "string"
+                ? item.description
+                : item && typeof item.transactionText === "string"
+                  ? item.transactionText
+                  : "",
+          amount: item && typeof item.amount === "number" ? item.amount : null,
+          currencyCode: item && typeof item.currencyCode === "string" ? item.currencyCode : "NOK"
+        }))
+      : [];
+
+    res.status(200).json({
+      account_key: accountKey,
+      from_date: fromDate,
+      to_date: toDate,
+      row_limit: rowLimit,
+      transactions,
+      errors: Array.isArray(payload.errors) ? payload.errors : []
+    });
+  } catch (err) {
+    console.error("Kunne ikke hente banktransaksjoner:", err && err.message ? err.message : err);
+    res.status(err && err.statusCode ? err.statusCode : 500).json({
+      error: err && err.message ? err.message : "Kunne ikke hente banktransaksjoner"
+    });
+  }
 });
 
 app.get("/entries.csv", (req, res) => {
