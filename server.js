@@ -25,6 +25,9 @@ db.serialize(() => {
       dishwasher INTEGER NOT NULL CHECK (dishwasher IN (0, 1)),
       creatine INTEGER NOT NULL CHECK (creatine IN (0, 1)),
       omega3 INTEGER NOT NULL CHECK (omega3 IN (0, 1)),
+      multivitamin INTEGER NOT NULL CHECK (multivitamin IN (0, 1)),
+      water INTEGER NOT NULL CHECK (water IN (0, 1)),
+      workout INTEGER NOT NULL CHECK (workout IN (0, 1)),
       bed INTEGER NOT NULL CHECK (bed IN (0, 1)),
       note TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -52,6 +55,24 @@ db.serialize(() => {
   db.run("ALTER TABLE entries ADD COLUMN omega3 INTEGER NOT NULL DEFAULT 0", (err) => {
     if (err && !/duplicate column name: omega3/.test(err.message)) {
       console.error("Kunne ikke migrere entries.omega3:", err.message);
+    }
+  });
+
+  db.run("ALTER TABLE entries ADD COLUMN multivitamin INTEGER NOT NULL DEFAULT 0", (err) => {
+    if (err && !/duplicate column name: multivitamin/.test(err.message)) {
+      console.error("Kunne ikke migrere entries.multivitamin:", err.message);
+    }
+  });
+
+  db.run("ALTER TABLE entries ADD COLUMN water INTEGER NOT NULL DEFAULT 0", (err) => {
+    if (err && !/duplicate column name: water/.test(err.message)) {
+      console.error("Kunne ikke migrere entries.water:", err.message);
+    }
+  });
+
+  db.run("ALTER TABLE entries ADD COLUMN workout INTEGER NOT NULL DEFAULT 0", (err) => {
+    if (err && !/duplicate column name: workout/.test(err.message)) {
+      console.error("Kunne ikke migrere entries.workout:", err.message);
     }
   });
 });
@@ -86,6 +107,31 @@ function isValidSource(value) {
 
 function todayDateString() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function workoutRequiredForDate(date) {
+  if (!isValidDateString(date)) {
+    return false;
+  }
+
+  // Saturday (6) is the rest day.
+  return new Date(`${date}T00:00:00Z`).getUTCDay() !== 6;
+}
+
+function allDoneForDate(status, date) {
+  const baseDone =
+    status.dishwasher === 1 &&
+    status.creatine === 1 &&
+    status.omega3 === 1 &&
+    status.multivitamin === 1 &&
+    status.water === 1 &&
+    status.bed === 1;
+
+  if (!baseDone) {
+    return false;
+  }
+
+  return workoutRequiredForDate(date) ? status.workout === 1 : true;
 }
 
 function normalizeScreenTimePayload(payload) {
@@ -287,14 +333,20 @@ app.post("/notes/shorten", async (req, res) => {
 });
 
 app.post("/entries", (req, res) => {
-  const { date, dishwasher, creatine, omega3, bed, note } = req.body || {};
+  const { date, dishwasher, creatine, omega3, multivitamin, water, workout, bed, note } = req.body || {};
   const omega3Value = omega3 === undefined ? 0 : omega3;
+  const multivitaminValue = multivitamin === undefined ? 0 : multivitamin;
+  const waterValue = water === undefined ? 0 : water;
+  const workoutValue = workout === undefined ? 0 : workout;
 
   if (
     !isValidDateString(date) ||
     !isZeroOrOne(dishwasher) ||
     !isZeroOrOne(creatine) ||
     !isZeroOrOne(omega3Value) ||
+    !isZeroOrOne(multivitaminValue) ||
+    !isZeroOrOne(waterValue) ||
+    !isZeroOrOne(workoutValue) ||
     !isZeroOrOne(bed) ||
     !isValidNote(note)
   ) {
@@ -317,6 +369,9 @@ app.post("/entries", (req, res) => {
         dishwasher,
         creatine,
         omega3: omega3Value,
+        multivitamin: multivitaminValue,
+        water: waterValue,
+        workout: workoutValue,
         bed,
         note: noteValue
       });
@@ -327,10 +382,10 @@ app.post("/entries", (req, res) => {
       db.run(
         `
           UPDATE entries
-          SET dishwasher = ?, creatine = ?, omega3 = ?, bed = ?, note = ?, created_at = datetime('now')
+          SET dishwasher = ?, creatine = ?, omega3 = ?, multivitamin = ?, water = ?, workout = ?, bed = ?, note = ?, created_at = datetime('now')
           WHERE id = ?
         `,
-        [dishwasher, creatine, omega3Value, bed, noteValue, existingId],
+        [dishwasher, creatine, omega3Value, multivitaminValue, waterValue, workoutValue, bed, noteValue, existingId],
         (updateErr) => {
           if (updateErr) {
             res.status(500).json({ error: "Kunne ikke lagre" });
@@ -349,8 +404,8 @@ app.post("/entries", (req, res) => {
     }
 
     db.run(
-      "INSERT INTO entries (date, dishwasher, creatine, omega3, bed, note) VALUES (?, ?, ?, ?, ?, ?)",
-      [date, dishwasher, creatine, omega3Value, bed, noteValue],
+      "INSERT INTO entries (date, dishwasher, creatine, omega3, multivitamin, water, workout, bed, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [date, dishwasher, creatine, omega3Value, multivitaminValue, waterValue, workoutValue, bed, noteValue],
       function onInsert(insertErr) {
         if (insertErr) {
           res.status(500).json({ error: "Kunne ikke lagre" });
@@ -377,6 +432,9 @@ app.get("/entries/today", (req, res) => {
         dishwasher,
         creatine,
         COALESCE(omega3, 0) AS omega3,
+        COALESCE(multivitamin, 0) AS multivitamin,
+        COALESCE(water, 0) AS water,
+        COALESCE(workout, 0) AS workout,
         bed,
         COALESCE(note, '') AS note
       FROM entries
@@ -396,17 +454,16 @@ app.get("/entries/today", (req, res) => {
         dishwasher: row && row.dishwasher === 1 ? 1 : 0,
         creatine: row && row.creatine === 1 ? 1 : 0,
         omega3: row && row.omega3 === 1 ? 1 : 0,
+        multivitamin: row && row.multivitamin === 1 ? 1 : 0,
+        water: row && row.water === 1 ? 1 : 0,
+        workout: row && row.workout === 1 ? 1 : 0,
         bed: row && row.bed === 1 ? 1 : 0,
         note: row && typeof row.note === "string" ? row.note : ""
       };
 
       res.status(200).json({
         ...status,
-        all_done:
-          status.dishwasher === 1 &&
-          status.creatine === 1 &&
-          status.omega3 === 1 &&
-          status.bed === 1
+        all_done: allDoneForDate(status, date)
       });
     }
   );
@@ -563,6 +620,9 @@ app.get("/entries.csv", (req, res) => {
         e.dishwasher AS dishwasher,
         e.creatine AS creatine,
         COALESCE(e.omega3, 0) AS omega3,
+        COALESCE(e.multivitamin, 0) AS multivitamin,
+        COALESCE(e.water, 0) AS water,
+        COALESCE(e.workout, 0) AS workout,
         e.bed AS bed,
         COALESCE(e.note, '') AS note
       FROM entries e
@@ -580,13 +640,16 @@ app.get("/entries.csv", (req, res) => {
       }
 
       const lines = [
-        "Dato,Oppvaskmaskin tømt,Kreatin tatt,Omega-3 tatt,Seng redd,Kommentar",
+        "Dato,Oppvaskmaskin tømt,Kreatin tatt,Omega-3 tatt,Multivitamin tatt,2L vann drukket,Trening gjennomført,Seng redd,Kommentar",
         ...rows.map((row) =>
           [
             escapeCsvValue(row.date),
             escapeCsvValue(row.dishwasher),
             escapeCsvValue(row.creatine),
             escapeCsvValue(row.omega3),
+            escapeCsvValue(row.multivitamin),
+            escapeCsvValue(row.water),
+            escapeCsvValue(row.workout),
             escapeCsvValue(row.bed),
             escapeCsvValue(row.note)
           ].join(",")
@@ -596,6 +659,53 @@ app.get("/entries.csv", (req, res) => {
       const csv = `\uFEFF${lines.join("\r\n")}`;
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader("Content-Disposition", 'inline; filename="entries.csv"');
+      res.status(200).send(csv);
+    }
+  );
+});
+
+app.get("/notes.csv", (req, res) => {
+  const key = req.query.key;
+
+  if (key !== CSV_KEY) {
+    res.status(401).type("text/plain; charset=utf-8").send("Unauthorized");
+    return;
+  }
+
+  // Avoid stale results through intermediate caches (Sheets/tunnel/CDN).
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+
+  db.all(
+    `
+      SELECT
+        e.date AS date,
+        COALESCE(e.note, '') AS note
+      FROM entries e
+      INNER JOIN (
+        SELECT date, MAX(id) AS latest_id
+        FROM entries
+        GROUP BY date
+      ) latest ON latest.latest_id = e.id
+      WHERE TRIM(COALESCE(e.note, '')) <> ''
+      ORDER BY e.date ASC
+    `,
+    (err, rows) => {
+      if (err) {
+        res.status(500).type("text/plain; charset=utf-8").send("Kunne ikke hente notat-CSV");
+        return;
+      }
+
+      const lines = [
+        "Dato,Notat",
+        ...rows.map((row) => [escapeCsvValue(row.date), escapeCsvValue(row.note)].join(","))
+      ];
+
+      const csv = `\uFEFF${lines.join("\r\n")}`;
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", 'inline; filename="notes.csv"');
       res.status(200).send(csv);
     }
   );

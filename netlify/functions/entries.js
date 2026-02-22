@@ -72,6 +72,9 @@ exports.handler = async (event) => {
       dishwasher: normalized.value.dishwasher,
       creatine: normalized.value.creatine,
       omega3: normalized.value.omega3,
+      multivitamin: normalized.value.multivitamin,
+      water: normalized.value.water,
+      workout: normalized.value.workout,
       bed: normalized.value.bed,
       note: normalized.value.note,
       created_at: createdAt
@@ -96,6 +99,9 @@ exports.handler = async (event) => {
       dishwasher: entry.dishwasher,
       creatine: entry.creatine,
       omega3: entry.omega3,
+      multivitamin: entry.multivitamin,
+      water: entry.water,
+      workout: entry.workout,
       bed: entry.bed,
       note: entry.note || null
     });

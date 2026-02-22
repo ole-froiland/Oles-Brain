@@ -132,6 +132,46 @@
         font-size: clamp(1.2rem, 1.8vw, 1.65rem);
       }
 
+      .dashboard-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .dashboard-header .panel-title {
+        margin: 0;
+      }
+
+      .sheets-link-button {
+        border: 1px solid var(--accent);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #ffffff;
+        background: var(--accent);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: transform 120ms ease, background-color 120ms ease;
+      }
+
+      .sheets-link-button:hover {
+        transform: translateY(-1px);
+        background: var(--accent-pressed);
+      }
+
+      .sheets-link-button:active {
+        transform: translateY(0);
+      }
+
+      .sheets-link-button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
       .dashboard-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -326,7 +366,7 @@
 
       .date-input-label {
         display: block;
-        margin: 0 0 8px;
+        margin: 12px 0 8px;
         color: var(--muted);
         font-size: 0.9rem;
       }
@@ -346,6 +386,143 @@
         color: var(--muted);
         font-size: 0.9rem;
         font-weight: 600;
+      }
+
+      .month-calendar {
+        margin-top: 6px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--surface);
+        max-width: 760px;
+        margin-inline: auto;
+      }
+
+      .month-calendar-header {
+        min-height: 54px;
+        padding: 7px 9px;
+        display: grid;
+        grid-template-columns: 36px 1fr 36px;
+        align-items: center;
+        gap: 8px;
+        background: #2d7f56;
+      }
+
+      .month-calendar-title {
+        margin: 0;
+        text-align: center;
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: #ffffff;
+      }
+
+      .month-calendar-nav {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 10px;
+        font: inherit;
+        font-size: 1.25rem;
+        line-height: 1;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.24);
+        cursor: pointer;
+      }
+
+      .month-calendar-nav:hover {
+        background: rgba(255, 255, 255, 0.28);
+      }
+
+      .month-calendar-grid {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      .month-calendar-grid th,
+      .month-calendar-grid td {
+        height: 44px;
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      .month-calendar-grid thead th {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--text);
+        background: var(--surface-soft);
+      }
+
+      .month-calendar-grid thead th.week-col {
+        width: 50px;
+        color: var(--muted);
+      }
+
+      .month-calendar-grid thead th.sun-col {
+        color: #d13e38;
+      }
+
+      .month-calendar-grid td {
+        border-top: 1px solid var(--border);
+      }
+
+      .month-calendar-grid td.week-number {
+        font-size: 0.84rem;
+        font-style: italic;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .month-calendar-grid td.in-month {
+        background: var(--surface);
+      }
+
+      .month-calendar-grid td.outside-month {
+        color: var(--muted);
+        background: var(--surface-soft);
+      }
+
+      .month-calendar-grid tr.selected-week td {
+        background: rgba(117, 123, 126, 0.18);
+      }
+
+      .month-day-button {
+        width: 34px;
+        height: 34px;
+        border: 2px solid transparent;
+        border-radius: 0;
+        font: inherit;
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: var(--text);
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .month-day-button:hover {
+        background: var(--surface-soft);
+      }
+
+      .month-day-button.selected {
+        border-color: #101010;
+        background: #ffffff;
+      }
+
+      .month-day-button.today {
+        box-shadow: inset 0 -3px 0 var(--accent);
+      }
+
+      .month-calendar-grid td.sun-day,
+      .month-calendar-grid td.sun-day .month-day-button {
+        color: #d13e38;
+      }
+
+      :root[data-theme="dark"] .month-calendar-grid tr.selected-week td {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      :root[data-theme="dark"] .month-day-button.selected {
+        background: #2d3b43;
       }
 
       .date-label {
@@ -542,6 +719,38 @@
           min-height: 160px;
         }
 
+        .month-calendar-header {
+          min-height: 48px;
+          padding: 5px 7px;
+          grid-template-columns: 32px 1fr 32px;
+        }
+
+        .month-calendar-title {
+          font-size: 1.3rem;
+        }
+
+        .month-calendar-nav {
+          width: 32px;
+          height: 32px;
+          font-size: 1.1rem;
+        }
+
+        .month-calendar-grid th,
+        .month-calendar-grid td {
+          height: 36px;
+          font-size: 0.82rem;
+        }
+
+        .month-calendar-grid thead th.week-col {
+          width: 42px;
+        }
+
+        .month-day-button {
+          width: 30px;
+          height: 30px;
+          font-size: 0.88rem;
+        }
+
         .mobile-swipe-hint {
           display: block;
         }
@@ -558,18 +767,11 @@
 
       <section class="panel-grid" aria-label="Hovedmeny">
         <section class="panel">
-          <h2 class="panel-title">Dashboard</h2>
+          <div class="dashboard-header">
+            <h2 class="panel-title">Dashboard</h2>
+            <button id="openSheetsButton" class="sheets-link-button" type="button">Åpne Sheets</button>
+          </div>
           <div class="dashboard-grid">
-            <article class="dash-card">
-              <p class="dash-label">Valgt dato</p>
-              <p id="dashboardDate" class="dash-value"></p>
-              <p id="dashboardDateObs" class="dash-observation"></p>
-            </article>
-            <article class="dash-card">
-              <p class="dash-label">Fullført rutiner</p>
-              <p id="dashboardProgress" class="dash-value"></p>
-              <p id="dashboardProgressObs" class="dash-observation"></p>
-            </article>
             <article class="dash-card">
               <p class="dash-label">Skjermtid</p>
               <p id="dashboardScreenTime" class="dash-value">Ikke registrert</p>
@@ -578,7 +780,7 @@
           </div>
           <article class="dash-card note-card">
             <div class="note-header">
-              <label class="note-label" for="dailyNote">Notat</label>
+              <label class="note-label" for="dailyNote">Huskeliste</label>
               <div class="note-header-controls">
                 <button
                   id="noteAddPointButton"
@@ -607,7 +809,7 @@
               </div>
             </div>
             <div id="notePointActions" class="note-point-actions"></div>
-            <textarea id="dailyNote" class="note-input" placeholder="Skriv tekst her og trykk Legg til..."></textarea>
+            <textarea id="dailyNote" class="note-input" placeholder="Skriv noe du vil huske og trykk Legg til..."></textarea>
           </article>
         </section>
 
@@ -626,14 +828,29 @@
               Kreatin
             </label>
 
+            <label class="item" data-task="omega3">
+              <input id="omega3" type="checkbox" />
+              Omega-3
+            </label>
+
+            <label class="item" data-task="multivitamin">
+              <input id="multivitamin" type="checkbox" />
+              Multivitamin
+            </label>
+
+            <label class="item" data-task="water">
+              <input id="water" type="checkbox" />
+              2L vann
+            </label>
+
             <label class="item" data-task="bed">
               <input id="bed" type="checkbox" />
               Seng
             </label>
 
-            <label class="item" data-task="omega3">
-              <input id="omega3" type="checkbox" />
-              Omega-3
+            <label class="item" data-task="workout">
+              <input id="workout" type="checkbox" />
+              Trening
             </label>
           </section>
 
@@ -642,7 +859,32 @@
         </section>
 
         <section class="panel">
-          <h2 class="panel-title">Kalender</h2>
+          <section class="month-calendar" aria-label="Månedskalender">
+            <header class="month-calendar-header">
+              <button id="calendarPrevMonth" class="month-calendar-nav" type="button" aria-label="Forrige måned">
+                ‹
+              </button>
+              <h3 id="calendarMonthLabel" class="month-calendar-title"></h3>
+              <button id="calendarNextMonth" class="month-calendar-nav" type="button" aria-label="Neste måned">
+                ›
+              </button>
+            </header>
+            <table class="month-calendar-grid" aria-label="Kalenderdager">
+              <thead>
+                <tr>
+                  <th class="week-col" scope="col">Uke</th>
+                  <th scope="col">Ma</th>
+                  <th scope="col">Ti</th>
+                  <th scope="col">On</th>
+                  <th scope="col">To</th>
+                  <th scope="col">Fr</th>
+                  <th scope="col">Lø</th>
+                  <th class="sun-col" scope="col">Sø</th>
+                </tr>
+              </thead>
+              <tbody id="calendarMonthBody"></tbody>
+            </table>
+          </section>
           <label class="date-input-label" for="datePicker">Velg dato</label>
           <input id="datePicker" class="date-picker" type="date" />
           <p id="calendarDateLabel" class="calendar-date-label" aria-live="polite"></p>
@@ -658,7 +900,7 @@
     </main>
 
     <script>
-      const TASKS = ["dishwasher", "creatine", "omega3", "bed"];
+      const TASKS = ["dishwasher", "creatine", "omega3", "multivitamin", "water", "bed", "workout"];
       const WORKOUT_PLAN_BY_WEEKDAY = {
         0: "Løping",
         1: "Push",
@@ -668,18 +910,20 @@
         5: "Pull"
       };
       const THEME_STORAGE_KEY = "oles-brain-theme";
-      const NOTE_SAVE_DELAY_MS = 700;
+      const SHEETS_URL_STORAGE_KEY = "oles-brain-sheets-url-v1";
+      const DEFAULT_SHEETS_URL =
+        "https://docs.google.com/spreadsheets/d/15KvATxIIEMW7877aUDdlIQYddclJdIzb07NJc3ywW0o/edit?gid=2001617319#gid=2001617319";
       const NOTE_SHORTEN_ENDPOINT = "/notes/shorten";
       const MAN_UTD_TEAM_ID = "360";
       const MAN_UTD_CORE_API_BASE = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/eng.1";
       let selectedDate = formatDateToday();
+      let calendarViewMonthKey = selectedDate.slice(0, 7);
       let saveQueue = Promise.resolve();
       let fixtures = [];
       let fixturesLoadingPromise = null;
       let fixturesLoaded = false;
       let selectedNoteText = "";
       let selectedNotePoints = [];
-      let noteSaveTimer = null;
       let noteRecognition = null;
       let noteRecognitionSupported = false;
       let noteRecognitionActive = false;
@@ -690,7 +934,10 @@
           dishwasher: 0,
           creatine: 0,
           omega3: 0,
-          bed: 0
+          multivitamin: 0,
+          water: 0,
+          bed: 0,
+          workout: 0
         };
       }
 
@@ -713,6 +960,13 @@
       function formatDateLabel(dateIso) {
         const [year, month, day] = dateIso.split("-");
         return `${day}.${month}.${year}`;
+      }
+
+      function formatDateLocalIso(dateValue) {
+        const year = String(dateValue.getFullYear());
+        const month = String(dateValue.getMonth() + 1).padStart(2, "0");
+        const day = String(dateValue.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
       }
 
       function parseLocalIsoDate(dateIso) {
@@ -746,6 +1000,160 @@
         return capitalizedWeekday;
       }
 
+      function monthKeyFromDateIso(dateIso) {
+        const parsed = parseLocalIsoDate(dateIso);
+        if (!parsed) {
+          return formatDateLocalIso(new Date()).slice(0, 7);
+        }
+
+        return formatDateLocalIso(new Date(parsed.getFullYear(), parsed.getMonth(), 1)).slice(0, 7);
+      }
+
+      function parseMonthKey(monthKey) {
+        const match = String(monthKey || "").match(/^(\d{4})-(\d{2})$/);
+        if (!match) {
+          return null;
+        }
+
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+          return null;
+        }
+
+        return { year, month };
+      }
+
+      function addMonthsToMonthKey(monthKey, delta) {
+        const parsed = parseMonthKey(monthKey);
+        const base = parsed ? new Date(parsed.year, parsed.month - 1, 1) : new Date();
+        base.setMonth(base.getMonth() + delta);
+        return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}`;
+      }
+
+      function formatMonthTitle(monthKey) {
+        const parsed = parseMonthKey(monthKey);
+        if (!parsed) {
+          return "";
+        }
+
+        const formatted = new Intl.DateTimeFormat("nb-NO", { month: "long", year: "numeric" }).format(
+          new Date(parsed.year, parsed.month - 1, 1)
+        );
+        return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      }
+
+      function startOfWeekMonday(dateValue) {
+        const result = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate());
+        const day = result.getDay();
+        const offset = day === 0 ? -6 : 1 - day;
+        result.setDate(result.getDate() + offset);
+        return result;
+      }
+
+      function endOfWeekSunday(dateValue) {
+        const result = startOfWeekMonday(dateValue);
+        result.setDate(result.getDate() + 6);
+        return result;
+      }
+
+      function isoWeekNumber(dateValue) {
+        const utcDate = new Date(Date.UTC(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate()));
+        const day = utcDate.getUTCDay() || 7;
+        utcDate.setUTCDate(utcDate.getUTCDate() + 4 - day);
+        const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
+        return Math.ceil((((utcDate - yearStart) / 86400000) + 1) / 7);
+      }
+
+      function renderMonthCalendar() {
+        const monthBody = document.getElementById("calendarMonthBody");
+        const monthLabel = document.getElementById("calendarMonthLabel");
+        if (!monthBody || !monthLabel) {
+          return;
+        }
+
+        const monthParsed = parseMonthKey(calendarViewMonthKey);
+        if (!monthParsed) {
+          calendarViewMonthKey = monthKeyFromDateIso(selectedDate);
+        }
+
+        const activeMonth = parseMonthKey(calendarViewMonthKey);
+        if (!activeMonth) {
+          return;
+        }
+
+        const monthStart = new Date(activeMonth.year, activeMonth.month - 1, 1);
+        const monthEnd = new Date(activeMonth.year, activeMonth.month, 0);
+        const gridStart = startOfWeekMonday(monthStart);
+        const gridEnd = endOfWeekSunday(monthEnd);
+
+        const selectedDateParsed = parseLocalIsoDate(selectedDate);
+        const selectedIso = selectedDateParsed ? formatDateLocalIso(selectedDateParsed) : "";
+        const todayIso = formatDateToday();
+
+        monthLabel.textContent = formatMonthTitle(calendarViewMonthKey);
+        monthBody.replaceChildren();
+
+        const cursor = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate());
+        while (cursor <= gridEnd) {
+          const weekStart = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+          const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate());
+          weekEnd.setDate(weekEnd.getDate() + 6);
+
+          const row = document.createElement("tr");
+          if (selectedDateParsed && selectedDateParsed >= weekStart && selectedDateParsed <= weekEnd) {
+            row.classList.add("selected-week");
+          }
+
+          const weekCell = document.createElement("td");
+          weekCell.className = "week-number";
+          weekCell.textContent = String(isoWeekNumber(weekStart));
+          row.appendChild(weekCell);
+
+          for (let dayOffset = 0; dayOffset < 7; dayOffset += 1) {
+            const day = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate());
+            day.setDate(day.getDate() + dayOffset);
+
+            const cell = document.createElement("td");
+            const inMonth = day.getMonth() === monthStart.getMonth();
+            const dayIso = formatDateLocalIso(day);
+            if (dayOffset === 6) {
+              cell.classList.add("sun-day");
+            }
+
+            if (!inMonth) {
+              cell.classList.add("outside-month");
+              row.appendChild(cell);
+              continue;
+            }
+
+            cell.classList.add("in-month");
+
+            const dayButton = document.createElement("button");
+            dayButton.type = "button";
+            dayButton.className = "month-day-button";
+            dayButton.dataset.calendarDate = dayIso;
+            dayButton.textContent = String(day.getDate());
+            dayButton.setAttribute("aria-label", `${formatWeekdayAndDateLabel(dayIso)} ${formatDateLabel(dayIso)}`);
+
+            if (dayIso === selectedIso) {
+              dayButton.classList.add("selected");
+              dayButton.setAttribute("aria-current", "date");
+            }
+
+            if (dayIso === todayIso) {
+              dayButton.classList.add("today");
+            }
+
+            cell.appendChild(dayButton);
+            row.appendChild(cell);
+          }
+
+          monthBody.appendChild(row);
+          cursor.setDate(cursor.getDate() + 7);
+        }
+      }
+
       function workoutPlanForDate(dateIso) {
         const parsed = parseLocalIsoDate(dateIso);
         if (!parsed) {
@@ -765,6 +1173,12 @@
           type: "workout",
           text: `Planlagt økt: ${workout}.`
         };
+      }
+
+      function requiredTasksForDate(dateIso) {
+        const workoutPlan = workoutPlanForDate(dateIso);
+        const workoutRequired = workoutPlan && workoutPlan.type === "workout";
+        return TASKS.filter((task) => (task === "workout" ? workoutRequired : true));
       }
 
       function formatFixtureTime(dateIso) {
@@ -924,13 +1338,13 @@
 
         selectedDateFixtures.forEach((fixture) => {
           const kickoff = formatFixtureTime(fixture.kickoffIso);
-          const homeAway = fixture.isHome ? "hjemme" : "borte";
+          const homeAwayShort = fixture.isHome ? "H" : "B";
           const item = document.createElement("li");
 
           if (kickoff) {
-            item.textContent = `Observasjon: Manchester United spiller kl. ${kickoff} mot ${fixture.opponent} (${homeAway}, ${fixture.tournament}).`;
+            item.textContent = `Man Utd ${kickoff} vs ${fixture.opponent} (${homeAwayShort})`;
           } else {
-            item.textContent = `Observasjon: Manchester United spiller mot ${fixture.opponent} (${homeAway}, ${fixture.tournament}).`;
+            item.textContent = `Man Utd vs ${fixture.opponent} (${homeAwayShort})`;
           }
 
           quickList.appendChild(item);
@@ -984,12 +1398,70 @@
         status.className = `status ${type || ""}`.trim();
       }
 
-      function allDone(doneState) {
-        return TASKS.every((task) => doneState[task] === 1);
+      function readSheetsUrlFromStorage() {
+        try {
+          return String(localStorage.getItem(SHEETS_URL_STORAGE_KEY) || "").trim();
+        } catch (_) {
+          return "";
+        }
       }
 
-      function countDone(doneState) {
-        return TASKS.reduce((sum, task) => sum + (doneState[task] === 1 ? 1 : 0), 0);
+      function saveSheetsUrlToStorage(url) {
+        try {
+          localStorage.setItem(SHEETS_URL_STORAGE_KEY, url);
+        } catch (_) {}
+      }
+
+      function isValidGoogleSheetsUrl(url) {
+        try {
+          const parsed = new URL(url);
+          return parsed.protocol === "https:" && parsed.hostname === "docs.google.com" && parsed.pathname.startsWith("/spreadsheets/");
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function setupSheetsButton() {
+        const button = document.getElementById("openSheetsButton");
+        if (!button) {
+          return;
+        }
+
+        button.title = "Åpne Google Sheets (hold Shift for å endre lenke)";
+
+        button.addEventListener("click", (event) => {
+          let sheetsUrl = readSheetsUrlFromStorage();
+          const forceNewUrl = event.shiftKey;
+          if (!forceNewUrl && !isValidGoogleSheetsUrl(sheetsUrl) && isValidGoogleSheetsUrl(DEFAULT_SHEETS_URL)) {
+            sheetsUrl = DEFAULT_SHEETS_URL;
+          }
+
+          if (forceNewUrl || !isValidGoogleSheetsUrl(sheetsUrl)) {
+            const enteredUrl = window.prompt(
+              "Lim inn lenken til Google Sheets-dokumentet ditt (lagres lokalt i nettleseren):",
+              "https://docs.google.com/spreadsheets/d/..."
+            );
+
+            if (!enteredUrl) {
+              return;
+            }
+
+            sheetsUrl = enteredUrl.trim();
+            if (!isValidGoogleSheetsUrl(sheetsUrl)) {
+              window.alert("Ugyldig Sheets-lenke. Bruk en docs.google.com/spreadsheets-lenke.");
+              return;
+            }
+
+            saveSheetsUrlToStorage(sheetsUrl);
+          }
+
+          window.open(sheetsUrl, "_blank", "noopener,noreferrer");
+        });
+      }
+
+      function allDone(doneState, dateIso) {
+        const requiredTasks = requiredTasksForDate(dateIso);
+        return requiredTasks.every((task) => doneState[task] === 1);
       }
 
       function toNonNegativeIntegerOrNull(value) {
@@ -1022,39 +1494,19 @@
         const formattedDate = `${formatDateLabel(selectedDate)}${suffix}`;
 
         const routineLabel = document.getElementById("dateLabel");
-        const dashboardDate = document.getElementById("dashboardDate");
-        const dashboardDateObs = document.getElementById("dashboardDateObs");
         const calendarDateLabel = document.getElementById("calendarDateLabel");
 
         routineLabel.textContent = `Viser dato: ${formattedDate}`;
-        dashboardDate.textContent = formattedDate;
         if (calendarDateLabel) {
           calendarDateLabel.textContent = formatWeekdayAndDateLabel(selectedDate);
         }
-        if (dashboardDateObs) {
-          dashboardDateObs.textContent =
-            selectedDate === today
-              ? "Observasjon: Dette er dagens dato, og visningen viser dagens registreringer."
-              : "Observasjon: Dette er valgt dato, og visningen viser registreringer for denne dagen.";
-        }
+        renderMonthCalendar();
         renderFixtures();
       }
 
       function updateDashboard() {
-        const doneCount = countDone(selectedDone);
-        const dashboardProgress = document.getElementById("dashboardProgress");
-        const dashboardProgressObs = document.getElementById("dashboardProgressObs");
         const dashboardScreenTime = document.getElementById("dashboardScreenTime");
         const dashboardScreenTimeObs = document.getElementById("dashboardScreenTimeObs");
-        const remaining = TASKS.length - doneCount;
-
-        dashboardProgress.textContent = `${doneCount}/${TASKS.length}`;
-        if (dashboardProgressObs) {
-          dashboardProgressObs.textContent =
-            doneCount === TASKS.length
-              ? `Observasjon: Alle ${TASKS.length} av ${TASKS.length} rutiner er fullført for valgt dato.`
-              : `Observasjon: ${doneCount} av ${TASKS.length} rutiner er fullført. ${remaining} gjenstår.`;
-        }
 
         if (dashboardScreenTime) {
           dashboardScreenTime.textContent = formatMinutes(selectedScreenTime.totalMinutes);
@@ -1087,20 +1539,41 @@
         updateAddPointButton();
       }
 
+      function notePointsFromStoredNote(value) {
+        return String(value || "")
+          .replace(/\r\n/g, "\n")
+          .split("\n")
+          .map((line) => normalizePointText(line))
+          .filter(Boolean);
+      }
+
+      function composeStoredNoteFromPoints(points) {
+        const cleanPoints = Array.isArray(points) ? points.map((point) => normalizePointText(point)).filter(Boolean) : [];
+        if (cleanPoints.length === 0) {
+          return "";
+        }
+
+        return cleanPoints.map((point) => `• ${point}`).join("\n");
+      }
+
       function applySelectedState() {
-        const doneEverything = allDone(selectedDone);
+        const requiredTaskSet = new Set(requiredTasksForDate(selectedDate));
+        const doneEverything = allDone(selectedDone, selectedDate);
         const completeMessage = document.getElementById("completeMessage");
 
         TASKS.forEach((task) => {
           const item = document.querySelector(`[data-task="${task}"]`);
           const checkbox = document.getElementById(task);
           const done = selectedDone[task] === 1;
+          const isRequired = requiredTaskSet.has(task);
 
           if (item) {
-            item.classList.toggle("completed", done);
+            item.classList.toggle("hidden", !isRequired);
+            item.classList.toggle("completed", isRequired && done);
           }
 
           if (checkbox) {
+            checkbox.disabled = !isRequired;
             checkbox.checked = done;
           }
         });
@@ -1122,16 +1595,22 @@
               dishwasher: body.dishwasher === 1 ? 1 : 0,
               creatine: body.creatine === 1 ? 1 : 0,
               omega3: body.omega3 === 1 ? 1 : 0,
-              bed: body.bed === 1 ? 1 : 0
+              multivitamin: body.multivitamin === 1 ? 1 : 0,
+              water: body.water === 1 ? 1 : 0,
+              bed: body.bed === 1 ? 1 : 0,
+              workout: body.workout === 1 ? 1 : 0
             };
-            setNoteFromRaw(typeof body.note === "string" ? body.note : "");
+            selectedNotePoints = notePointsFromStoredNote(body && typeof body.note === "string" ? body.note : "");
+            selectedNoteText = "";
           } else {
             selectedDone = emptyDoneState();
-            setNoteFromRaw("");
+            selectedNotePoints = [];
+            selectedNoteText = "";
           }
         } catch (_) {
           selectedDone = emptyDoneState();
-          setNoteFromRaw("");
+          selectedNotePoints = [];
+          selectedNoteText = "";
         }
 
         try {
@@ -1159,19 +1638,22 @@
         syncNoteInput();
       }
 
-      function buildPayload(date, doneState, note) {
+      function buildPayload(date, doneState, notePoints) {
         return {
           date,
           dishwasher: doneState.dishwasher === 1 ? 1 : 0,
           creatine: doneState.creatine === 1 ? 1 : 0,
           omega3: doneState.omega3 === 1 ? 1 : 0,
+          multivitamin: doneState.multivitamin === 1 ? 1 : 0,
+          water: doneState.water === 1 ? 1 : 0,
           bed: doneState.bed === 1 ? 1 : 0,
-          note: typeof note === "string" ? note : ""
+          workout: doneState.workout === 1 ? 1 : 0,
+          note: composeStoredNoteFromPoints(notePoints)
         };
       }
 
-      async function persistEntry(date, doneState, note) {
-        const payload = buildPayload(date, doneState, note);
+      async function persistEntry(date, doneState, notePoints) {
+        const payload = buildPayload(date, doneState, notePoints);
 
         try {
           const response = await fetch("/entries", {
@@ -1201,98 +1683,13 @@
       function queueAutoSave() {
         const dateSnapshot = selectedDate;
         const doneSnapshot = { ...selectedDone };
-        const noteSnapshot = composeNoteContent(selectedNotePoints, selectedNoteText);
+        const notePointsSnapshot = [...selectedNotePoints];
 
         if (selectedDate === dateSnapshot) {
           setStatus("Lagrer...", "pending");
         }
 
-        saveQueue = saveQueue.then(() => persistEntry(dateSnapshot, doneSnapshot, noteSnapshot));
-      }
-
-      function queueNoteSaveDebounced() {
-        if (noteSaveTimer) {
-          clearTimeout(noteSaveTimer);
-        }
-
-        noteSaveTimer = window.setTimeout(() => {
-          noteSaveTimer = null;
-          queueAutoSave();
-        }, NOTE_SAVE_DELAY_MS);
-      }
-
-      function flushPendingNoteSave() {
-        if (!noteSaveTimer) {
-          return;
-        }
-
-        clearTimeout(noteSaveTimer);
-        noteSaveTimer = null;
-        queueAutoSave();
-      }
-
-      function noteLines(value) {
-        return String(value || "")
-          .replace(/\r\n/g, "\n")
-          .split("\n");
-      }
-
-      function isPointLine(line) {
-        return /^\s*[•*-]\s*/.test(String(line || ""));
-      }
-
-      function splitNoteContent(value) {
-        const points = [];
-        const textLines = [];
-
-        noteLines(value).forEach((line) => {
-          const rawLine = String(line || "");
-          if (isPointLine(rawLine)) {
-            const pointText = rawLine.replace(/^\s*[•*-]\s*/, "").trim();
-            if (pointText !== "") {
-              points.push(pointText);
-            }
-            return;
-          }
-
-          textLines.push(rawLine);
-        });
-
-        while (textLines.length > 0 && textLines[0].trim() === "") {
-          textLines.shift();
-        }
-        while (textLines.length > 0 && textLines[textLines.length - 1].trim() === "") {
-          textLines.pop();
-        }
-
-        return {
-          points,
-          text: textLines.join("\n")
-        };
-      }
-
-      function composeNoteContent(points, text) {
-        const pointLines = (Array.isArray(points) ? points : [])
-          .map((point) => String(point || "").trim())
-          .filter(Boolean)
-          .map((point) => `• ${point}`);
-        const textValue = String(text || "").replace(/\r\n/g, "\n").trim();
-
-        if (pointLines.length > 0 && textValue !== "") {
-          return `${pointLines.join("\n")}\n\n${textValue}`;
-        }
-
-        if (pointLines.length > 0) {
-          return pointLines.join("\n");
-        }
-
-        return textValue;
-      }
-
-      function setNoteFromRaw(rawNote) {
-        const parts = splitNoteContent(rawNote);
-        selectedNotePoints = parts.points;
-        selectedNoteText = parts.text;
+        saveQueue = saveQueue.then(() => persistEntry(dateSnapshot, doneSnapshot, notePointsSnapshot));
       }
 
       function normalizePointText(value) {
@@ -1461,7 +1858,7 @@
         selectedNotePoints.push(shortText);
         renderNotePointActions();
         updateAddPointButton();
-        queueNoteSaveDebounced();
+        queueAutoSave();
       }
 
       function setupNoteVoiceInput() {
@@ -1491,7 +1888,6 @@
         noteRecognition.onend = () => {
           noteRecognitionActive = false;
           updateNoteVoiceButton();
-          flushPendingNoteSave();
         };
 
         noteRecognition.onerror = () => {
@@ -1556,14 +1952,6 @@
           selectedNoteText = noteInput.value;
           renderNotePointActions();
           updateAddPointButton();
-          queueNoteSaveDebounced();
-        });
-
-        noteInput.addEventListener("blur", () => {
-          selectedNoteText = noteInput.value;
-          renderNotePointActions();
-          updateAddPointButton();
-          flushPendingNoteSave();
         });
       }
 
@@ -1621,12 +2009,62 @@
           if (noteRecognition && noteRecognitionActive) {
             noteRecognition.stop();
           }
-          flushPendingNoteSave();
           await saveQueue;
           selectedDate = datePicker.value;
+          calendarViewMonthKey = monthKeyFromDateIso(selectedDate);
           setStatus("", "");
           await loadSelectedDateState();
         });
+      }
+
+      function setupMonthCalendar() {
+        const monthBody = document.getElementById("calendarMonthBody");
+        const previousMonthButton = document.getElementById("calendarPrevMonth");
+        const nextMonthButton = document.getElementById("calendarNextMonth");
+        const datePicker = document.getElementById("datePicker");
+
+        if (!monthBody || !previousMonthButton || !nextMonthButton || !datePicker) {
+          return;
+        }
+
+        previousMonthButton.addEventListener("click", () => {
+          calendarViewMonthKey = addMonthsToMonthKey(calendarViewMonthKey, -1);
+          renderMonthCalendar();
+        });
+
+        nextMonthButton.addEventListener("click", () => {
+          calendarViewMonthKey = addMonthsToMonthKey(calendarViewMonthKey, 1);
+          renderMonthCalendar();
+        });
+
+        monthBody.addEventListener("click", async (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) {
+            return;
+          }
+
+          const dayButton = target.closest("[data-calendar-date]");
+          if (!dayButton) {
+            return;
+          }
+
+          const nextDate = String(dayButton.getAttribute("data-calendar-date") || "");
+          if (!parseLocalIsoDate(nextDate) || nextDate === selectedDate) {
+            return;
+          }
+
+          if (noteRecognition && noteRecognitionActive) {
+            noteRecognition.stop();
+          }
+
+          await saveQueue;
+          selectedDate = nextDate;
+          datePicker.value = nextDate;
+          setStatus("", "");
+          await loadSelectedDateState();
+        });
+
+        renderMonthCalendar();
       }
 
       function applyTheme(theme) {
@@ -1726,11 +2164,13 @@
 
       setupTheme();
       setupDateControls();
+      setupMonthCalendar();
       setupTaskToggles();
       setupNoteInput();
       setupNoteAddPoint();
       setupNotePointActions();
       setupNoteVoiceInput();
+      setupSheetsButton();
       setupMobilePanelNavigation();
       loadSelectedDateState();
       loadManchesterUnitedFixtures();

@@ -27,6 +27,12 @@
   force = true
 
 [[redirects]]
+  from = "/notes.csv"
+  to = "/.netlify/functions/notes-csv"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/screen-time"
   to = "/.netlify/functions/screen-time"
   status = 200
