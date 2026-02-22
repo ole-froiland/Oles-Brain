@@ -19,7 +19,7 @@ exports.handler = async (event) => {
 
   try {
     const query = event.queryStringParameters || {};
-    const result = await fetchTransactions({
+    const result = await fetchTransactions(event, {
       accountKey: typeof query.accountKey === "string" ? query.accountKey.trim() : "",
       fromDate: typeof query.fromDate === "string" ? query.fromDate.trim() : "",
       toDate: typeof query.toDate === "string" ? query.toDate.trim() : "",

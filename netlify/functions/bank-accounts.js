@@ -23,7 +23,7 @@ exports.handler = async (event) => {
         ? event.queryStringParameters.accountKey.trim()
         : "";
 
-    const result = await fetchAccounts(preferredAccountKey);
+    const result = await fetchAccounts(event, preferredAccountKey);
 
     return {
       statusCode: 200,

@@ -1,3 +1,7 @@
+const fs = require("fs/promises");
+const path = require("path");
+const { connectLambda, getStore } = require("@netlify/blobs");
+
 const SB1_API_BASE =
   typeof process.env.SB1_API_BASE === "string" && process.env.SB1_API_BASE.trim() !== ""
     ? process.env.SB1_API_BASE.trim()
@@ -9,6 +13,9 @@ const SB1_REFRESH_TOKEN =
   typeof process.env.SB1_REFRESH_TOKEN === "string" ? process.env.SB1_REFRESH_TOKEN.trim() : "";
 const SB1_DEFAULT_ACCOUNT_KEY =
   typeof process.env.SB1_DEFAULT_ACCOUNT_KEY === "string" ? process.env.SB1_DEFAULT_ACCOUNT_KEY.trim() : "";
+const STORE_NAME = "oles-brain";
+const SB1_STATE_KEY = "sb1-oauth-state";
+const localStatePath = path.join(process.cwd(), "data", "netlify-sb1-state.json");
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
@@ -40,31 +47,132 @@ function ensureConfig() {
   }
 }
 
-async function issueAccessTokenFromRefreshToken() {
-  ensureConfig();
+function hasBlobsContext(event) {
+  try {
+    connectLambda(event);
+  } catch (_) {}
 
-  const response = await fetch(`${SB1_API_BASE}/oauth/token`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams({
-      client_id: SB1_CLIENT_ID,
-      client_secret: SB1_CLIENT_SECRET,
-      refresh_token: SB1_REFRESH_TOKEN,
-      grant_type: "refresh_token"
-    })
-  });
+  return Boolean(process.env.NETLIFY_BLOBS_CONTEXT || globalThis.netlifyBlobsContext);
+}
 
-  const body = await response.json().catch(() => ({}));
-  const accessToken = typeof body.access_token === "string" ? body.access_token : "";
-  if (!response.ok || !accessToken) {
-    const err = new Error(body.error_description || body.error || "Kunne ikke hente SB1-token");
-    err.statusCode = response.status || 502;
+function getBlobStore(event) {
+  try {
+    connectLambda(event);
+  } catch (_) {}
+
+  return getStore(STORE_NAME);
+}
+
+async function readOAuthStateFromFile() {
+  try {
+    const raw = await fs.readFile(localStatePath, "utf8");
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (err) {
+    if (err && err.code === "ENOENT") {
+      return {};
+    }
+
     throw err;
   }
+}
 
-  return accessToken;
+async function writeOAuthStateToFile(value) {
+  await fs.mkdir(path.dirname(localStatePath), { recursive: true });
+  await fs.writeFile(localStatePath, JSON.stringify(value, null, 2));
+}
+
+async function readOAuthState(event) {
+  if (hasBlobsContext(event)) {
+    const store = getBlobStore(event);
+    const value = await store.get(SB1_STATE_KEY, { type: "json" });
+    return value && typeof value === "object" ? value : {};
+  }
+
+  return readOAuthStateFromFile();
+}
+
+async function writeOAuthState(event, value) {
+  if (hasBlobsContext(event)) {
+    const store = getBlobStore(event);
+    await store.setJSON(SB1_STATE_KEY, value);
+    return;
+  }
+
+  if (process.env.NETLIFY === "true") {
+    // In production Netlify, Blobs should be used. Failing silently here avoids user-facing outage.
+    return;
+  }
+
+  await writeOAuthStateToFile(value);
+}
+
+function uniqueNonEmpty(values) {
+  return Array.from(new Set(values.map((value) => String(value || "").trim()).filter(Boolean)));
+}
+
+async function issueAccessTokenFromRefreshToken(event) {
+  ensureConfig();
+
+  let storedState = {};
+  try {
+    storedState = await readOAuthState(event);
+  } catch (err) {
+    console.error("Kunne ikke lese SB1 OAuth-state:", err && err.message ? err.message : err);
+  }
+
+  const storedRefreshToken =
+    storedState && typeof storedState.refresh_token === "string" ? storedState.refresh_token.trim() : "";
+  const candidateRefreshTokens = uniqueNonEmpty([storedRefreshToken, SB1_REFRESH_TOKEN]);
+
+  let lastErr = null;
+  for (const refreshTokenCandidate of candidateRefreshTokens) {
+    const response = await fetch(`${SB1_API_BASE}/oauth/token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        client_id: SB1_CLIENT_ID,
+        client_secret: SB1_CLIENT_SECRET,
+        refresh_token: refreshTokenCandidate,
+        grant_type: "refresh_token"
+      })
+    });
+
+    const body = await response.json().catch(() => ({}));
+    const accessToken = typeof body.access_token === "string" ? body.access_token : "";
+    if (!response.ok || !accessToken) {
+      lastErr = new Error(body.error_description || body.error || "Kunne ikke hente SB1-token");
+      lastErr.statusCode = response.status || 502;
+      continue;
+    }
+
+    const rotatedRefreshToken =
+      typeof body.refresh_token === "string" && body.refresh_token.trim() !== ""
+        ? body.refresh_token.trim()
+        : refreshTokenCandidate;
+    if (rotatedRefreshToken !== storedRefreshToken) {
+      try {
+        await writeOAuthState(event, {
+          refresh_token: rotatedRefreshToken,
+          updated_at: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error("Kunne ikke lagre rotert SB1 refresh-token:", err && err.message ? err.message : err);
+      }
+    }
+
+    return accessToken;
+  }
+
+  if (lastErr) {
+    throw lastErr;
+  }
+
+  const err = new Error("Kunne ikke hente SB1-token");
+  err.statusCode = 502;
+  throw err;
 }
 
 async function fetchSb1Json(pathname, { accessToken, accept, queryParams }) {
@@ -149,8 +257,8 @@ function normalizeTransactions(payload) {
   };
 }
 
-async function fetchAccounts(preferredAccountKey) {
-  const accessToken = await issueAccessTokenFromRefreshToken();
+async function fetchAccounts(event, preferredAccountKey) {
+  const accessToken = await issueAccessTokenFromRefreshToken(event);
   const payload = await fetchSb1Json("/personal/banking/accounts", {
     accessToken,
     accept: "application/vnd.sparebank1.v5+json; charset=utf-8",
@@ -159,7 +267,7 @@ async function fetchAccounts(preferredAccountKey) {
   return normalizeAccounts(payload, preferredAccountKey);
 }
 
-async function fetchTransactions({ accountKey, fromDate, toDate, rowLimit }) {
+async function fetchTransactions(event, { accountKey, fromDate, toDate, rowLimit }) {
   const effectiveAccountKey = accountKey || SB1_DEFAULT_ACCOUNT_KEY;
   if (!effectiveAccountKey) {
     const err = new Error("Mangler accountKey");
@@ -171,7 +279,7 @@ async function fetchTransactions({ accountKey, fromDate, toDate, rowLimit }) {
   const effectiveToDate = isValidIsoDate(toDate) ? toDate : todayIsoDate();
   const effectiveRowLimit = parseBankRowLimit(rowLimit);
 
-  const accessToken = await issueAccessTokenFromRefreshToken();
+  const accessToken = await issueAccessTokenFromRefreshToken(event);
   const payload = await fetchSb1Json("/personal/banking/transactions", {
     accessToken,
     accept: "application/vnd.sparebank1.v1+json; charset=utf-8",
@@ -193,6 +301,7 @@ async function fetchTransactions({ accountKey, fromDate, toDate, rowLimit }) {
 }
 
 module.exports = {
+  issueAccessTokenFromRefreshToken,
   fetchAccounts,
   fetchTransactions
 };

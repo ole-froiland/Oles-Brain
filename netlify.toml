@@ -67,3 +67,9 @@
   to = "/.netlify/functions/bank-transactions"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/bank/keepalive"
+  to = "/.netlify/functions/sb1-keepalive"
+  status = 200
+  force = true
