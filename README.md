@@ -49,6 +49,8 @@ Sett env var i Netlify:
 - `OPENAI_API_KEY=...` (kreves for Maker AI-chat)
 - `OPENAI_MAKER_MODEL=gpt-4.1` (valgfri, default er `gpt-4.1`)
 
+Hvis `OPENAI_API_KEY` ikke er satt på server, kan du også legge inn OpenAI-nøkkel direkte i Maker UI via knappen `AI-nøkkel`.
+
 Bruk app i prod:
 
 - `https://oles-brain.netlify.app/`

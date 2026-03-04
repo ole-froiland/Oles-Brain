@@ -1320,6 +1320,11 @@
           padding: 0 12px;
         }
 
+        #makerApiKeyButton,
+        #makerNewChatButtonTop {
+          display: none;
+        }
+
         .maker-messages {
           padding: 14px 12px 18px;
         }
@@ -1522,6 +1527,7 @@
               <span>Maker</span>
             </div>
             <div class="maker-topbar-actions">
+              <button id="makerApiKeyButton" class="maker-top-action" type="button">AI-nøkkel</button>
               <button id="makerNewChatButtonTop" class="maker-top-action" type="button">Ny chat</button>
               <button class="launcher-back-button" type="button" data-close-launcher>Tilbake</button>
             </div>
@@ -1558,6 +1564,7 @@
       const BANK_ACCOUNTS_ENDPOINT = "/bank/accounts";
       const BANK_TRANSACTIONS_ENDPOINT = "/bank/transactions";
       const MAKER_CHAT_ENDPOINT = "/maker/chat";
+      const MAKER_API_KEY_STORAGE_KEY = "oles-brain-maker-openai-key-v1";
       const LAUNCHER_APP_ROOT_IDS = Object.freeze({
         "oles-brain": "dashboardRoot",
         maker: "makerRoot"
@@ -3303,6 +3310,82 @@
         makerUpdateSendButtonState();
       }
 
+      function makerStoredApiKey() {
+        try {
+          const value = localStorage.getItem(MAKER_API_KEY_STORAGE_KEY);
+          return typeof value === "string" ? value.trim() : "";
+        } catch (_) {
+          return "";
+        }
+      }
+
+      function makerSaveApiKey(apiKey) {
+        const nextValue = String(apiKey || "").trim();
+        if (!nextValue) {
+          return;
+        }
+
+        try {
+          localStorage.setItem(MAKER_API_KEY_STORAGE_KEY, nextValue);
+        } catch (_) {
+          // Ignore localStorage failures (private mode etc).
+        }
+      }
+
+      function makerClearApiKey() {
+        try {
+          localStorage.removeItem(MAKER_API_KEY_STORAGE_KEY);
+        } catch (_) {
+          // Ignore localStorage failures.
+        }
+      }
+
+      function makerRefreshApiKeyButton() {
+        const button = document.getElementById("makerApiKeyButton");
+        if (!(button instanceof HTMLButtonElement)) {
+          return;
+        }
+
+        button.textContent = makerStoredApiKey() ? "AI-nøkkel ✓" : "AI-nøkkel";
+      }
+
+      function makerRequestHeaders() {
+        const headers = {
+          "Content-Type": "application/json"
+        };
+
+        const storedKey = makerStoredApiKey();
+        if (storedKey) {
+          headers["x-openai-api-key"] = storedKey;
+        }
+
+        return headers;
+      }
+
+      function makerPromptForApiKey() {
+        const entered = window.prompt(
+          "Lim inn OpenAI API-nøkkel for Maker. Skriv DELETE for å slette lagret nøkkel."
+        );
+        if (entered === null) {
+          return false;
+        }
+
+        const trimmed = entered.trim();
+        if (!trimmed) {
+          return false;
+        }
+
+        if (trimmed.toUpperCase() === "DELETE") {
+          makerClearApiKey();
+          makerRefreshApiKeyButton();
+          return false;
+        }
+
+        makerSaveApiKey(trimmed);
+        makerRefreshApiKeyButton();
+        return true;
+      }
+
       function makerApiMessages(messages) {
         return messages
           .filter((message) => message && (message.role === "user" || message.role === "assistant"))
@@ -3314,16 +3397,14 @@
           .slice(-20);
       }
 
-      async function makerFetchReply(messages) {
+      async function makerFetchReply(messages, retryOnMissingKey = true) {
         const controller = new AbortController();
         const timeoutId = window.setTimeout(() => controller.abort(), 70000);
 
         try {
           const response = await fetch(MAKER_CHAT_ENDPOINT, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
+            headers: makerRequestHeaders(),
             body: JSON.stringify({
               messages: makerApiMessages(messages)
             }),
@@ -3336,6 +3417,14 @@
               payload && typeof payload.error === "string" && payload.error.trim() !== ""
                 ? payload.error
                 : `Maker AI svarte ${response.status}`;
+
+            if (retryOnMissingKey && /mangler OPENAI_API_KEY/i.test(message)) {
+              const didSave = makerPromptForApiKey();
+              if (didSave) {
+                return makerFetchReply(messages, false);
+              }
+            }
+
             throw new Error(message);
           }
 
@@ -3359,6 +3448,7 @@
         const threadList = document.getElementById("makerThreadList");
         const composer = document.getElementById("makerComposer");
         const input = document.getElementById("makerInput");
+        const apiKeyButton = document.getElementById("makerApiKeyButton");
         const newChatButtons = [
           document.getElementById("makerNewChatButton"),
           document.getElementById("makerNewChatButtonMobile"),
@@ -3408,6 +3498,15 @@
             input.focus();
           });
         });
+
+        if (apiKeyButton instanceof HTMLButtonElement) {
+          apiKeyButton.addEventListener("click", () => {
+            const didSave = makerPromptForApiKey();
+            if (didSave) {
+              input.focus();
+            }
+          });
+        }
 
         input.addEventListener("input", () => {
           makerAutoResizeInput();
@@ -3469,6 +3568,7 @@
         });
 
         makerAutoResizeInput();
+        makerRefreshApiKeyButton();
         makerUpdateSendButtonState();
       }
 

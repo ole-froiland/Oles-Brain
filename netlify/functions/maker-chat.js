@@ -123,6 +123,21 @@ async function generateMakerReplyWithOpenAI({ apiKey, model, messages }) {
   return outputText;
 }
 
+function makerApiKeyFromEvent(event) {
+  const envKey = typeof process.env.OPENAI_API_KEY === "string" ? process.env.OPENAI_API_KEY.trim() : "";
+  if (envKey) {
+    return envKey;
+  }
+
+  const headers = event && event.headers && typeof event.headers === "object" ? event.headers : {};
+  const headerValue = headers["x-openai-api-key"] || headers["X-OpenAI-Api-Key"] || headers["X-OPENAI-API-KEY"];
+  if (typeof headerValue === "string" && headerValue.trim() !== "") {
+    return headerValue.trim();
+  }
+
+  return "";
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return {
@@ -147,7 +162,7 @@ exports.handler = async (event) => {
     return json(400, { error: normalized.error });
   }
 
-  const apiKey = typeof process.env.OPENAI_API_KEY === "string" ? process.env.OPENAI_API_KEY.trim() : "";
+  const apiKey = makerApiKeyFromEvent(event);
   const model = process.env.OPENAI_MAKER_MODEL || "gpt-4.1";
 
   try {

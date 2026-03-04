@@ -482,8 +482,21 @@ function makerMessagesToInput(messages) {
     .join("\n\n");
 }
 
-async function generateMakerReplyWithOpenAI(messages) {
-  if (!OPENAI_API_KEY || typeof fetch !== "function") {
+function makerApiKeyFromRequest(req) {
+  if (OPENAI_API_KEY) {
+    return OPENAI_API_KEY;
+  }
+
+  const headerValue = req.get("x-openai-api-key");
+  if (typeof headerValue === "string" && headerValue.trim() !== "") {
+    return headerValue.trim();
+  }
+
+  return "";
+}
+
+async function generateMakerReplyWithOpenAI({ messages, apiKey }) {
+  if (!apiKey || typeof fetch !== "function") {
     const err = new Error("Maker AI er ikke konfigurert (mangler OPENAI_API_KEY)");
     err.statusCode = 503;
     throw err;
@@ -493,7 +506,7 @@ async function generateMakerReplyWithOpenAI(messages) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`
+      Authorization: `Bearer ${apiKey}`
     },
     body: JSON.stringify({
       model: OPENAI_MAKER_MODEL,
@@ -586,8 +599,13 @@ app.post("/maker/chat", async (req, res) => {
     return;
   }
 
+  const makerApiKey = makerApiKeyFromRequest(req);
+
   try {
-    const reply = await generateMakerReplyWithOpenAI(normalized.value);
+    const reply = await generateMakerReplyWithOpenAI({
+      messages: normalized.value,
+      apiKey: makerApiKey
+    });
     res.status(200).json({
       reply,
       model: OPENAI_MAKER_MODEL
