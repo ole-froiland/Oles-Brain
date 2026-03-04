@@ -149,6 +149,10 @@
         display: none;
       }
 
+      .app-root[aria-hidden="true"] {
+        display: none;
+      }
+
       .launcher-back-button {
         border: 1px solid #d5d5d5;
         border-radius: 999px;
@@ -174,6 +178,31 @@
       .launcher-back-button:focus-visible {
         outline: 2px solid #1f1f1f;
         outline-offset: 2px;
+      }
+
+      .maker-root {
+        width: min(760px, 94vw);
+      }
+
+      .maker-panel {
+        margin-top: 14px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        background: var(--panel);
+      }
+
+      .maker-title {
+        margin: 0;
+        font-family: "Fraunces", serif;
+        font-size: clamp(1.8rem, 4vw, 2.4rem);
+        line-height: 1.05;
+      }
+
+      .maker-description {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 1rem;
       }
 
       .card {
@@ -1012,11 +1041,15 @@
           <span class="launcher-app-icon" aria-hidden="true"></span>
           <span class="launcher-app-name">Ole&rsquo;s Brain</span>
         </button>
+        <button class="launcher-app" type="button" data-launch-app="maker" aria-label="Open Maker">
+          <span class="launcher-app-icon" aria-hidden="true"></span>
+          <span class="launcher-app-name">Maker</span>
+        </button>
       </div>
     </section>
 
-    <main id="dashboardRoot" class="card" aria-hidden="true">
-      <button id="launcherBackButton" class="launcher-back-button" type="button">Tilbake</button>
+    <main id="dashboardRoot" class="card app-root" aria-hidden="true">
+      <button id="launcherBackButton" class="launcher-back-button" type="button" data-close-launcher>Tilbake</button>
       <p class="mobile-swipe-hint">Sveip sidelengs mellom Dashboard, Rutiner og Kalender.</p>
 
       <section class="panel-grid" aria-label="Hovedmeny">
@@ -1166,6 +1199,14 @@
       </nav>
     </main>
 
+    <main id="makerRoot" class="card app-root maker-root" aria-hidden="true">
+      <button class="launcher-back-button" type="button" data-close-launcher>Tilbake</button>
+      <section class="maker-panel" aria-label="Maker app">
+        <h1 class="maker-title">Maker</h1>
+        <p class="maker-description">Ny app er klar. Si fra hva du vil at Maker skal gjøre, så bygger jeg den videre.</p>
+      </section>
+    </main>
+
     <script>
       const TASKS = ["dishwasher", "creatine", "omega3", "multivitamin", "water", "bed", "workout"];
       const WORKOUT_PLAN_BY_WEEKDAY = {
@@ -1183,6 +1224,10 @@
       const NOTE_SHORTEN_ENDPOINT = "/notes/shorten";
       const BANK_ACCOUNTS_ENDPOINT = "/bank/accounts";
       const BANK_TRANSACTIONS_ENDPOINT = "/bank/transactions";
+      const LAUNCHER_APP_ROOT_IDS = Object.freeze({
+        "oles-brain": "dashboardRoot",
+        maker: "makerRoot"
+      });
       const MAN_UTD_TEAM_ID = "360";
       const MAN_UTD_CORE_API_BASE = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/eng.1";
       let selectedDate = formatDateToday();
@@ -2799,31 +2844,44 @@
         setActiveButton(activeIndex);
       }
 
+      function hideAllLauncherApps() {
+        const appRoots = document.querySelectorAll(".app-root");
+        appRoots.forEach((root) => {
+          root.setAttribute("aria-hidden", "true");
+        });
+      }
+
+      function getLauncherAppRoot(appId) {
+        const rootId = LAUNCHER_APP_ROOT_IDS[appId];
+        if (!rootId) {
+          return null;
+        }
+
+        const root = document.getElementById(rootId);
+        return root instanceof HTMLElement ? root : null;
+      }
+
       function openLauncherApp(appId) {
-        if (appId !== "oles-brain") {
-          return;
-        }
-
-        const dashboardRoot = document.getElementById("dashboardRoot");
         const launcherScreen = document.getElementById("launcherScreen");
-        if (!dashboardRoot || !launcherScreen) {
+        const appRoot = getLauncherAppRoot(appId);
+        if (!launcherScreen || !appRoot) {
           return;
         }
 
+        hideAllLauncherApps();
         launcherScreen.setAttribute("aria-hidden", "true");
-        dashboardRoot.removeAttribute("aria-hidden");
+        appRoot.removeAttribute("aria-hidden");
         document.body.classList.remove("launcher-mode");
       }
 
       function closeLauncherApp() {
-        const dashboardRoot = document.getElementById("dashboardRoot");
         const launcherScreen = document.getElementById("launcherScreen");
         const firstLauncherApp = document.querySelector("[data-launch-app]");
-        if (!dashboardRoot || !launcherScreen) {
+        if (!launcherScreen) {
           return;
         }
 
-        dashboardRoot.setAttribute("aria-hidden", "true");
+        hideAllLauncherApps();
         launcherScreen.removeAttribute("aria-hidden");
         document.body.classList.add("launcher-mode");
 
@@ -2834,7 +2892,6 @@
 
       function setupLauncher() {
         const launcherScreen = document.getElementById("launcherScreen");
-        const backButton = document.getElementById("launcherBackButton");
         if (!launcherScreen) {
           return;
         }
@@ -2853,9 +2910,10 @@
           openLauncherApp(String(launchButton.getAttribute("data-launch-app") || ""));
         });
 
-        if (backButton) {
-          backButton.addEventListener("click", closeLauncherApp);
-        }
+        const backButtons = Array.from(document.querySelectorAll("[data-close-launcher]"));
+        backButtons.forEach((button) => {
+          button.addEventListener("click", closeLauncherApp);
+        });
       }
 
       setupLauncher();
