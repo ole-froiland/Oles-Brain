@@ -1562,7 +1562,7 @@
         maker: "makerRoot"
       });
       const MAKER_WELCOME_MESSAGE =
-        "Hei! Jeg er Maker. Layouten er nå satt opp som en ChatGPT-lignende arbeidsflate. Skriv hva du vil bygge.";
+        "Hei! Jeg er Maker. Skriv hva du vil lage, så får du alltid 3 enkle spørsmål først. Deretter bygger jeg en superproff prompt basert på svarene dine.";
       const MAN_UTD_TEAM_ID = "360";
       const MAN_UTD_CORE_API_BASE = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/eng.1";
       let selectedDate = formatDateToday();
@@ -3257,6 +3257,9 @@
         const thread = {
           id: `maker-thread-${Date.now()}-${makerThreadSequence}`,
           title: `Ny chat ${makerThreadSequence}`,
+          awaitingPromptAnswers: false,
+          pendingPromptRequest: "",
+          pendingPromptQuestions: [],
           messages: [
             {
               role: "assistant",
@@ -3292,8 +3295,93 @@
         sendButton.disabled = input.value.trim() === "";
       }
 
-      function makerAssistantReplyFromPrompt(promptText) {
-        return `Mottatt. Jeg kan hjelpe deg bygge dette i Maker:\n- ${promptText}\n\nSkriv neste steg, så fortsetter vi.`;
+      function makerCompactText(text) {
+        return String(text || "")
+          .trim()
+          .replace(/\s+/g, " ");
+      }
+
+      function makerGenerateClarifyingQuestions(promptText) {
+        const compactPrompt = makerCompactText(promptText);
+        const topicPreview = compactPrompt.length > 68 ? `${compactPrompt.slice(0, 67)}...` : compactPrompt;
+
+        return [
+          `Hva er hovedmålet med dette: "${topicPreview}"?`,
+          "Hvem er målgruppen, og hvilket resultat vil du at de skal sitte igjen med?",
+          "Hvilket format, tone og lengde vil du ha i sluttresultatet?"
+        ];
+      }
+
+      function makerQuestionsReply(questions) {
+        return [
+          "Kjempebra. Svar på disse 3 enkle spørsmålene, så lager jeg en superproff prompt:",
+          `1. ${questions[0]}`,
+          `2. ${questions[1]}`,
+          `3. ${questions[2]}`,
+          "",
+          "Skriv gjerne svaret ditt slik:",
+          "1) ...",
+          "2) ...",
+          "3) ..."
+        ].join("\n");
+      }
+
+      function makerExtractAnswers(answerText) {
+        const numberedAnswers = String(answerText || "")
+          .split(/\n+/)
+          .map((line) => makerCompactText(line))
+          .filter(Boolean)
+          .map((line) => line.replace(/^[1-3][).:\-]?\s*/, "").trim())
+          .filter(Boolean);
+
+        let answers = numberedAnswers;
+        if (answers.length === 0) {
+          answers = String(answerText || "")
+            .split(/\n|;/)
+            .map((part) => makerCompactText(part))
+            .filter(Boolean);
+        }
+
+        while (answers.length < 3) {
+          answers.push("Ikke spesifisert");
+        }
+
+        return answers.slice(0, 3);
+      }
+
+      function makerBuildProfessionalPrompt({ originalRequest, questions, answerText }) {
+        const cleanRequest = makerCompactText(originalRequest);
+        const answers = makerExtractAnswers(answerText);
+
+        return [
+          "Perfekt. Her er en superproff prompt basert på svarene dine:",
+          "",
+          "```",
+          "Du er en senior spesialist innen feltet under, og skal levere et resultat med høy kvalitet.",
+          "",
+          `Hovedoppgave: ${cleanRequest}`,
+          "",
+          "Kontekst og avklaringer:",
+          `- Avklaring 1 (${questions[0]}): ${answers[0]}`,
+          `- Avklaring 2 (${questions[1]}): ${answers[1]}`,
+          `- Avklaring 3 (${questions[2]}): ${answers[2]}`,
+          "",
+          "Instruksjoner:",
+          "- Bryt ned oppgaven i en kort og tydelig plan før du leverer selve resultatet.",
+          "- Prioriter konkret språk, målbar verdi, og tydelige anbefalinger.",
+          "- Bruk beste praksis, unngå fluff, og forklar valg kort når det gir verdi.",
+          "",
+          "Outputkrav:",
+          "- Lever svaret strukturert med overskrifter og punktlister der det passer.",
+          "- Tilpass språk, tone og detaljeringsgrad til målgruppen.",
+          "- Avslutt med 3 neste anbefalte steg.",
+          "",
+          "Kvalitetskontroll før levering:",
+          "- Er innholdet handlingsrettet, presist og uten gjentakelser?",
+          "- Er alle viktige antagelser eksplisitte?",
+          "- Er resultatet klart til bruk uten ekstra omskriving?",
+          "```"
+        ].join("\n");
       }
 
       function setupMakerApp() {
@@ -3378,10 +3466,35 @@
             }
           }
 
-          thread.messages.push({
-            role: "assistant",
-            text: makerAssistantReplyFromPrompt(promptText)
-          });
+          if (thread.awaitingPromptAnswers) {
+            const questions =
+              Array.isArray(thread.pendingPromptQuestions) && thread.pendingPromptQuestions.length === 3
+                ? thread.pendingPromptQuestions
+                : makerGenerateClarifyingQuestions(thread.pendingPromptRequest || promptText);
+
+            thread.messages.push({
+              role: "assistant",
+              text: makerBuildProfessionalPrompt({
+                originalRequest: thread.pendingPromptRequest || promptText,
+                questions,
+                answerText: promptText
+              })
+            });
+
+            thread.awaitingPromptAnswers = false;
+            thread.pendingPromptRequest = "";
+            thread.pendingPromptQuestions = [];
+          } else {
+            const questions = makerGenerateClarifyingQuestions(promptText);
+            thread.awaitingPromptAnswers = true;
+            thread.pendingPromptRequest = promptText;
+            thread.pendingPromptQuestions = questions;
+
+            thread.messages.push({
+              role: "assistant",
+              text: makerQuestionsReply(questions)
+            });
+          }
 
           input.value = "";
           makerRenderThreadList();
