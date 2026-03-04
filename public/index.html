@@ -62,109 +62,6 @@
         transition: background-color 180ms ease, color 180ms ease;
       }
 
-      body.login-active {
-        background: #ffffff;
-      }
-
-      .login-view {
-        position: fixed;
-        inset: 0;
-        z-index: 20;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        background: #ffffff;
-      }
-
-      .login-shell {
-        width: min(440px, 100%);
-        border: 1px solid #dbe4dc;
-        border-radius: 18px;
-        padding: clamp(20px, 4vw, 32px);
-        background: #ffffff;
-        box-shadow: 0 20px 40px rgba(31, 43, 31, 0.12);
-      }
-
-      .login-kicker {
-        margin: 0 0 10px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #2d7f56;
-      }
-
-      .login-subtitle {
-        margin: 10px 0 20px;
-        color: #475649;
-      }
-
-      .login-form {
-        display: grid;
-        gap: 12px;
-      }
-
-      .login-label {
-        font-size: 0.88rem;
-        font-weight: 600;
-        color: #2a392c;
-      }
-
-      .login-input {
-        width: 100%;
-        border: 1px solid #cfd9d1;
-        border-radius: 12px;
-        padding: 12px;
-        font: inherit;
-        font-size: 0.96rem;
-        color: #1f2b1f;
-        background: #ffffff;
-      }
-
-      .login-input:focus-visible {
-        outline: 2px solid #2d7f56;
-        outline-offset: 1px;
-        border-color: #2d7f56;
-      }
-
-      .login-status {
-        min-height: 1.2em;
-        margin: 2px 0 0;
-        font-size: 0.86rem;
-        color: #5d6b5f;
-      }
-
-      .login-status.error {
-        color: #a73d32;
-      }
-
-      .login-status.info {
-        color: #2d7f56;
-      }
-
-      .login-submit {
-        border: 1px solid #2d7f56;
-        border-radius: 999px;
-        padding: 11px 16px;
-        font: inherit;
-        font-size: 0.92rem;
-        font-weight: 700;
-        color: #ffffff;
-        background: #2d7f56;
-        cursor: pointer;
-        transition: transform 120ms ease, background-color 120ms ease;
-      }
-
-      .login-submit:hover {
-        transform: translateY(-1px);
-        background: #246545;
-      }
-
-      .login-submit:active {
-        transform: translateY(0);
-      }
-
       .card {
         width: min(1400px, 96vw);
         background: transparent;
@@ -247,14 +144,6 @@
         margin: 0;
       }
 
-      .dashboard-actions {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-
       .sheets-link-button {
         border: 1px solid var(--accent);
         border-radius: 999px;
@@ -281,16 +170,6 @@
       .sheets-link-button:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: 2px;
-      }
-
-      .logout-button {
-        color: var(--text);
-        border-color: var(--border);
-        background: var(--surface);
-      }
-
-      .logout-button:hover {
-        border-color: var(--accent);
       }
 
       .dashboard-grid {
@@ -932,16 +811,6 @@
           padding: 0;
         }
 
-        .login-view {
-          padding: 16px;
-        }
-
-        .login-shell {
-          border-radius: 14px;
-          padding: 20px 16px;
-          box-shadow: 0 16px 32px rgba(31, 43, 31, 0.1);
-        }
-
         .card {
           width: 100vw;
           min-height: 100vh;
@@ -1022,53 +891,21 @@
       }
     </style>
   </head>
-  <body class="login-active">
-    <section id="loginView" class="login-view" aria-label="Innlogging">
-      <div class="login-shell">
-        <p class="login-kicker">Oles Brain</p>
-        <h1>Logg inn</h1>
-        <p class="login-subtitle">Fortsett til Oles Brain-appen.</p>
-        <form id="loginForm" class="login-form" novalidate>
-          <label class="login-label" for="loginUsername">Brukernavn</label>
-          <input id="loginUsername" class="login-input" type="text" name="username" autocomplete="username" required />
-          <label class="login-label" for="loginPassword">Passord</label>
-          <input
-            id="loginPassword"
-            class="login-input"
-            type="password"
-            name="password"
-            autocomplete="current-password"
-            required
-          />
-          <p id="loginStatus" class="login-status" role="status" aria-live="polite"></p>
-          <button class="login-submit" type="submit">Gå til Oles Brain</button>
-        </form>
-      </div>
-    </section>
-
-    <main id="appRoot" class="card" hidden aria-hidden="true">
+  <body>
+    <main class="card">
       <p class="mobile-swipe-hint">Sveip sidelengs mellom Dashboard, Rutiner og Kalender.</p>
 
       <section class="panel-grid" aria-label="Hovedmeny">
         <section class="panel">
           <div class="dashboard-header">
             <h2 class="panel-title">Dashboard</h2>
-            <div class="dashboard-actions">
-              <button id="openStepsPageButton" class="sheets-link-button" type="button">Steg-side</button>
-              <button id="openSheetsButton" class="sheets-link-button" type="button">Åpne Sheets</button>
-              <button id="logoutButton" class="sheets-link-button logout-button" type="button">Logg ut</button>
-            </div>
+            <button id="openSheetsButton" class="sheets-link-button" type="button">Åpne Sheets</button>
           </div>
           <div class="dashboard-grid">
             <article class="dash-card">
               <p class="dash-label">Skjermtid</p>
               <p id="dashboardScreenTime" class="dash-value">Ikke registrert</p>
               <p id="dashboardScreenTimeObs" class="dash-observation"></p>
-            </article>
-            <article class="dash-card">
-              <p class="dash-label">Steg</p>
-              <p id="dashboardSteps" class="dash-value">Ikke registrert</p>
-              <p id="dashboardStepsObs" class="dash-observation"></p>
             </article>
           </div>
           <article class="dash-card bank-panel">
@@ -1158,11 +995,6 @@
               <span>Skjermtid</span>
               <span id="screenTimeItemValue" class="screen-time-item-value">Ikke registrert</span>
             </button>
-
-            <button id="stepsButton" class="item screen-time-item-button" type="button">
-              <span>Steg</span>
-              <span id="stepsItemValue" class="screen-time-item-value">Ikke registrert</span>
-            </button>
           </section>
 
           <p id="status" class="status" role="status" aria-live="polite"></p>
@@ -1227,7 +1059,6 @@
       const NOTE_SHORTEN_ENDPOINT = "/notes/shorten";
       const BANK_ACCOUNTS_ENDPOINT = "/bank/accounts";
       const BANK_TRANSACTIONS_ENDPOINT = "/bank/transactions";
-      const LOGIN_SESSION_KEY = "oles-brain-login-session-v1";
       const MAN_UTD_TEAM_ID = "360";
       const MAN_UTD_CORE_API_BASE = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/eng.1";
       let selectedDate = formatDateToday();
@@ -1243,11 +1074,9 @@
       let noteRecognitionActive = false;
       let noteAddPointBusy = false;
       let screenTimeSaveBusy = false;
-      let stepsSaveBusy = false;
       let bankBusy = false;
       let bankSelectedAccountKey = "";
       let bankAccounts = [];
-      let appInitialized = false;
 
       function emptyDoneState() {
         return {
@@ -1270,17 +1099,8 @@
         };
       }
 
-      function emptyStepsState() {
-        return {
-          totalSteps: null,
-          source: "",
-          hasData: false
-        };
-      }
-
       let selectedDone = emptyDoneState();
       let selectedScreenTime = emptyScreenTimeState();
-      let selectedSteps = emptyStepsState();
 
       function formatDateToday() {
         return new Date().toISOString().slice(0, 10);
@@ -1776,35 +1596,9 @@
         return hours * 60 + minutes;
       }
 
-      function promptForStepsTotal() {
-        const defaultValue = toNonNegativeIntegerOrNull(selectedSteps.totalSteps);
-        const stepsInput = window.prompt("Steg: antall steg", defaultValue === null ? "" : String(defaultValue));
-        if (stepsInput === null) {
-          return null;
-        }
-
-        const totalSteps = parseNonNegativeIntegerInput(stepsInput);
-        if (totalSteps === null) {
-          window.alert("Ugyldig antall steg. Skriv et heltall (0 eller høyere).");
-          return null;
-        }
-
-        return totalSteps;
-      }
-
       function setScreenTimeButtonBusy(isBusy) {
         screenTimeSaveBusy = isBusy;
         const button = document.getElementById("screenTimeButton");
-        if (!button) {
-          return;
-        }
-
-        button.disabled = isBusy;
-      }
-
-      function setStepsButtonBusy(isBusy) {
-        stepsSaveBusy = isBusy;
-        const button = document.getElementById("stepsButton");
         if (!button) {
           return;
         }
@@ -1842,32 +1636,6 @@
           pickups: storedPickups,
           source: typeof body.source === "string" ? body.source : "",
           hasData: storedTotalMinutes !== null
-        };
-      }
-
-      async function persistManualSteps(totalSteps) {
-        const payload = {
-          date: selectedDate,
-          total_steps: totalSteps,
-          source: "manual-ui"
-        };
-
-        const response = await fetch("/steps/manual", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        const body = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(body.error || "Kunne ikke lagre steg");
-        }
-
-        const storedTotalSteps = toNonNegativeIntegerOrNull(body.total_steps);
-        selectedSteps = {
-          totalSteps: storedTotalSteps,
-          source: typeof body.source === "string" ? body.source : "",
-          hasData: storedTotalSteps !== null
         };
       }
 
@@ -1929,18 +1697,6 @@
           }
 
           window.open(sheetsUrl, "_blank", "noopener,noreferrer");
-        });
-      }
-
-      function setupStepsPageButton() {
-        const button = document.getElementById("openStepsPageButton");
-        if (!button) {
-          return;
-        }
-
-        button.title = "Åpne steg-siden";
-        button.addEventListener("click", () => {
-          window.location.href = "/steps-view.html";
         });
       }
 
@@ -2205,15 +1961,6 @@
         return `${hours} t ${minutes} min`;
       }
 
-      function formatSteps(totalSteps) {
-        const value = toNonNegativeIntegerOrNull(totalSteps);
-        if (value === null) {
-          return "Ikke registrert";
-        }
-
-        return `${new Intl.NumberFormat("nb-NO").format(value)} steg`;
-      }
-
       function updateDateLabel() {
         const today = formatDateToday();
         const suffix = selectedDate === today ? " (i dag)" : "";
@@ -2234,9 +1981,6 @@
         const dashboardScreenTime = document.getElementById("dashboardScreenTime");
         const dashboardScreenTimeObs = document.getElementById("dashboardScreenTimeObs");
         const screenTimeItemValue = document.getElementById("screenTimeItemValue");
-        const dashboardSteps = document.getElementById("dashboardSteps");
-        const dashboardStepsObs = document.getElementById("dashboardStepsObs");
-        const stepsItemValue = document.getElementById("stepsItemValue");
 
         if (dashboardScreenTime) {
           dashboardScreenTime.textContent = formatMinutes(selectedScreenTime.totalMinutes);
@@ -2255,23 +1999,6 @@
               selectedScreenTime.pickups === null ? "" : `, ${selectedScreenTime.pickups} opplåsinger`;
             const sourceText = selectedScreenTime.source ? ` (kilde: ${selectedScreenTime.source})` : "";
             dashboardScreenTimeObs.textContent = `Observasjon: ${durationText}${pickupsText}${sourceText}.`;
-          }
-        }
-
-        if (dashboardSteps) {
-          dashboardSteps.textContent = formatSteps(selectedSteps.totalSteps);
-        }
-
-        if (stepsItemValue) {
-          stepsItemValue.textContent = formatSteps(selectedSteps.totalSteps);
-        }
-
-        if (dashboardStepsObs) {
-          if (!selectedSteps.hasData || selectedSteps.totalSteps === null) {
-            dashboardStepsObs.textContent = "Observasjon: Ingen steg registrert for valgt dato ennå.";
-          } else {
-            const sourceText = selectedSteps.source ? ` (kilde: ${selectedSteps.source})` : "";
-            dashboardStepsObs.textContent = `Observasjon: ${formatSteps(selectedSteps.totalSteps)}${sourceText}.`;
           }
         }
       }
@@ -2382,24 +2109,6 @@
           }
         } catch (_) {
           selectedScreenTime = emptyScreenTimeState();
-        }
-
-        try {
-          const response = await fetch(`/steps/today?date=${encodeURIComponent(selectedDate)}`);
-          if (response.ok) {
-            const body = await response.json();
-            const totalSteps = toNonNegativeIntegerOrNull(body.total_steps);
-
-            selectedSteps = {
-              totalSteps,
-              source: typeof body.source === "string" ? body.source : "",
-              hasData: body.has_data === true && totalSteps !== null
-            };
-          } else {
-            selectedSteps = emptyStepsState();
-          }
-        } catch (_) {
-          selectedSteps = emptyStepsState();
         }
 
         updateDateLabel();
@@ -2746,41 +2455,6 @@
         });
       }
 
-      function setupStepsButton() {
-        const button = document.getElementById("stepsButton");
-        if (!button) {
-          return;
-        }
-
-        button.addEventListener("click", async () => {
-          if (stepsSaveBusy) {
-            return;
-          }
-
-          const totalSteps = promptForStepsTotal();
-          if (totalSteps === null) {
-            return;
-          }
-
-          setStepsButtonBusy(true);
-          setStatus("Lagrer steg...", "pending");
-
-          try {
-            await persistManualSteps(totalSteps);
-            updateDashboard();
-            setStatus("Steg lagret", "success");
-          } catch (error) {
-            const message =
-              error && typeof error.message === "string" && error.message.trim() !== ""
-                ? error.message
-                : "Kunne ikke lagre steg";
-            setStatus(message, "error");
-          } finally {
-            setStepsButtonBusy(false);
-          }
-        });
-      }
-
       function setupNoteInput() {
         const noteInput = document.getElementById("dailyNote");
         if (!noteInput) {
@@ -3001,126 +2675,20 @@
         setActiveButton(activeIndex);
       }
 
-      function setLoginStatus(message, tone = "") {
-        const loginStatus = document.getElementById("loginStatus");
-        if (!loginStatus) {
-          return;
-        }
-
-        loginStatus.textContent = message;
-        loginStatus.classList.toggle("error", tone === "error");
-        loginStatus.classList.toggle("info", tone === "info");
-      }
-
-      function setLoginViewVisible(isVisible) {
-        const loginView = document.getElementById("loginView");
-        const appRoot = document.getElementById("appRoot");
-
-        if (loginView) {
-          loginView.hidden = !isVisible;
-        }
-
-        if (appRoot) {
-          appRoot.hidden = isVisible;
-          appRoot.setAttribute("aria-hidden", isVisible ? "true" : "false");
-        }
-
-        document.body.classList.toggle("login-active", isVisible);
-      }
-
-      async function initializeAppIfNeeded() {
-        if (appInitialized) {
-          return;
-        }
-
-        appInitialized = true;
-        setupTheme();
-        setupDateControls();
-        setupMonthCalendar();
-        setupTaskToggles();
-        setupScreenTimeButton();
-        setupStepsButton();
-        setupNoteInput();
-        setupNoteAddPoint();
-        setupNotePointActions();
-        setupNoteVoiceInput();
-        setupSheetsButton();
-        setupStepsPageButton();
-        setupBankPanel();
-        setupMobilePanelNavigation();
-        await loadSelectedDateState();
-        void loadManchesterUnitedFixtures();
-      }
-
-      function setupLoginGate() {
-        const loginForm = document.getElementById("loginForm");
-        const usernameInput = document.getElementById("loginUsername");
-        const passwordInput = document.getElementById("loginPassword");
-        const logoutButton = document.getElementById("logoutButton");
-        const hasSession = sessionStorage.getItem(LOGIN_SESSION_KEY) === "active";
-
-        function focusUsername() {
-          if (!usernameInput) {
-            return;
-          }
-          usernameInput.focus();
-          usernameInput.select();
-        }
-
-        if (logoutButton) {
-          logoutButton.addEventListener("click", () => {
-            sessionStorage.removeItem(LOGIN_SESSION_KEY);
-            setLoginViewVisible(true);
-            setLoginStatus("Du er logget ut.", "info");
-            if (passwordInput) {
-              passwordInput.value = "";
-            }
-            focusUsername();
-          });
-        }
-
-        if (loginForm) {
-          loginForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const username = usernameInput ? usernameInput.value.trim() : "";
-            const password = passwordInput ? passwordInput.value.trim() : "";
-
-            if (username === "" || password === "") {
-              setLoginStatus("Skriv inn brukernavn og passord.", "error");
-              return;
-            }
-
-            setLoginStatus("", "");
-            sessionStorage.setItem(LOGIN_SESSION_KEY, "active");
-            setLoginViewVisible(false);
-            if (passwordInput) {
-              passwordInput.value = "";
-            }
-
-            try {
-              await initializeAppIfNeeded();
-            } catch (_) {
-              sessionStorage.removeItem(LOGIN_SESSION_KEY);
-              setLoginViewVisible(true);
-              setLoginStatus("Kunne ikke laste Oles Brain. Prøv igjen.", "error");
-              focusUsername();
-            }
-          });
-        }
-
-        if (hasSession) {
-          setLoginViewVisible(false);
-          setLoginStatus("", "");
-          void initializeAppIfNeeded();
-          return;
-        }
-
-        setLoginViewVisible(true);
-        setLoginStatus("", "");
-        focusUsername();
-      }
-
-      setupLoginGate();
+      setupTheme();
+      setupDateControls();
+      setupMonthCalendar();
+      setupTaskToggles();
+      setupScreenTimeButton();
+      setupNoteInput();
+      setupNoteAddPoint();
+      setupNotePointActions();
+      setupNoteVoiceInput();
+      setupSheetsButton();
+      setupBankPanel();
+      setupMobilePanelNavigation();
+      loadSelectedDateState();
+      loadManchesterUnitedFixtures();
     </script>
   </body>
 </html>
