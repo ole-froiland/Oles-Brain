@@ -62,6 +62,93 @@
         transition: background-color 180ms ease, color 180ms ease;
       }
 
+      body.launcher-mode {
+        padding: 0;
+        display: block;
+        color: #111111;
+        background: #ffffff;
+      }
+
+      .launcher-screen {
+        display: none;
+      }
+
+      body.launcher-mode .launcher-screen {
+        width: min(900px, 92vw);
+        min-height: 100vh;
+        padding: clamp(24px, 5vw, 56px);
+        display: grid;
+        align-content: start;
+      }
+
+      .launcher-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(92px, 92px));
+        gap: 18px;
+      }
+
+      .launcher-app {
+        border: none;
+        background: transparent;
+        color: #141414;
+        font: inherit;
+        cursor: pointer;
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        padding: 2px;
+      }
+
+      .launcher-app:focus-visible {
+        outline: 2px solid #1f1f1f;
+        outline-offset: 5px;
+        border-radius: 18px;
+      }
+
+      .launcher-app-icon {
+        width: 78px;
+        height: 78px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        border: 1px solid #e5e5e5;
+        background: linear-gradient(150deg, #ffffff 0%, #f2f4f7 100%);
+        box-shadow:
+          0 10px 24px rgba(15, 15, 15, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.92);
+        transition: transform 140ms ease, box-shadow 140ms ease;
+      }
+
+      .launcher-app-icon::before {
+        content: "";
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        background: linear-gradient(135deg, #2f7f57 0%, #58b781 100%);
+        box-shadow:
+          0 6px 10px rgba(27, 84, 57, 0.22),
+          inset 0 1px 0 rgba(255, 255, 255, 0.55);
+      }
+
+      .launcher-app:hover .launcher-app-icon,
+      .launcher-app:focus-visible .launcher-app-icon {
+        transform: translateY(-2px);
+        box-shadow:
+          0 13px 26px rgba(15, 15, 15, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      }
+
+      .launcher-app-name {
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.2;
+        letter-spacing: 0.01em;
+      }
+
+      body.launcher-mode .card {
+        display: none;
+      }
+
       .card {
         width: min(1400px, 96vw);
         background: transparent;
@@ -891,8 +978,17 @@
       }
     </style>
   </head>
-  <body>
-    <main class="card">
+  <body class="launcher-mode">
+    <section id="launcherScreen" class="launcher-screen" aria-label="App launcher">
+      <div class="launcher-grid" aria-label="Apps">
+        <button class="launcher-app" type="button" data-launch-app="oles-brain" aria-label="Open Ole&rsquo;s Brain">
+          <span class="launcher-app-icon" aria-hidden="true"></span>
+          <span class="launcher-app-name">Ole&rsquo;s Brain</span>
+        </button>
+      </div>
+    </section>
+
+    <main id="dashboardRoot" class="card" aria-hidden="true">
       <p class="mobile-swipe-hint">Sveip sidelengs mellom Dashboard, Rutiner og Kalender.</p>
 
       <section class="panel-grid" aria-label="Hovedmeny">
@@ -2675,6 +2771,44 @@
         setActiveButton(activeIndex);
       }
 
+      function openLauncherApp(appId) {
+        if (appId !== "oles-brain") {
+          return;
+        }
+
+        const dashboardRoot = document.getElementById("dashboardRoot");
+        const launcherScreen = document.getElementById("launcherScreen");
+        if (!dashboardRoot || !launcherScreen) {
+          return;
+        }
+
+        launcherScreen.setAttribute("aria-hidden", "true");
+        dashboardRoot.removeAttribute("aria-hidden");
+        document.body.classList.remove("launcher-mode");
+      }
+
+      function setupLauncher() {
+        const launcherScreen = document.getElementById("launcherScreen");
+        if (!launcherScreen) {
+          return;
+        }
+
+        launcherScreen.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) {
+            return;
+          }
+
+          const launchButton = target.closest("[data-launch-app]");
+          if (!launchButton) {
+            return;
+          }
+
+          openLauncherApp(String(launchButton.getAttribute("data-launch-app") || ""));
+        });
+      }
+
+      setupLauncher();
       setupTheme();
       setupDateControls();
       setupMonthCalendar();
