@@ -1199,14 +1199,15 @@
 
       .agent-hub {
         position: fixed;
-        top: 0;
-        right: 0;
-        width: min(430px, 96vw);
-        height: 100vh;
+        top: 10px;
+        right: 10px;
+        width: min(460px, calc(100vw - 20px));
+        height: calc(100vh - 20px);
         z-index: 41;
-        border-left: 1px solid var(--border);
-        background: var(--panel);
-        box-shadow: -18px 0 36px rgba(16, 24, 20, 0.18);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+        box-shadow: 0 18px 42px rgba(34, 53, 40, 0.18);
         padding: 18px 16px 20px;
         overflow: auto;
         transform: translateX(102%);
@@ -1227,7 +1228,7 @@
       .agent-hub-kicker {
         margin: 0;
         color: var(--muted);
-        font-size: 0.74rem;
+        font-size: 0.76rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -1236,15 +1237,17 @@
       .agent-hub-title {
         margin: 5px 0 0;
         font-family: var(--design-type-heading-family);
-        font-size: 1.4rem;
+        font-size: 2rem;
+        line-height: 1.05;
       }
 
       .agent-hub-close {
         border: 1px solid var(--border);
         border-radius: var(--design-radius-pill);
-        padding: 6px 11px;
+        min-height: 44px;
+        padding: 8px 17px;
         font: inherit;
-        font-size: 0.8rem;
+        font-size: 0.82rem;
         font-weight: 600;
         color: var(--text);
         background: var(--surface);
@@ -1271,15 +1274,15 @@
         align-items: center;
         border: 1px solid var(--accent);
         border-radius: var(--design-radius-pill);
-        padding: 5px 10px;
+        padding: 9px 16px;
         color: #ffffff;
         background: var(--accent);
-        font-size: 0.8rem;
+        font-size: 0.88rem;
         font-weight: 700;
       }
 
       .design-status-row {
-        margin-top: 14px;
+        margin-top: 18px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1289,8 +1292,8 @@
       .design-status-indicator {
         border: 1px solid var(--border);
         border-radius: var(--design-radius-pill);
-        padding: 5px 9px;
-        font-size: 0.74rem;
+        padding: 10px 16px;
+        font-size: 0.86rem;
         font-weight: 700;
         color: var(--muted);
         background: var(--surface-soft);
@@ -1307,23 +1310,23 @@
       .design-round-indicator {
         margin: 0;
         color: var(--muted);
-        font-size: 0.78rem;
+        font-size: 1rem;
       }
 
       .design-controls {
         margin-top: 12px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        gap: 10px;
       }
 
       .design-action-button {
         border: 1px solid var(--border);
-        border-radius: var(--design-radius-sm);
-        min-height: 37px;
-        padding: 7px 9px;
+        border-radius: var(--design-radius-md);
+        min-height: 58px;
+        padding: 10px 12px;
         font: inherit;
-        font-size: 0.8rem;
+        font-size: 0.86rem;
         font-weight: 700;
         color: var(--text);
         background: var(--surface);
@@ -1350,10 +1353,10 @@
       }
 
       .design-agent-status {
-        margin: 9px 0 0;
+        margin: 14px 0 0;
         min-height: 1.2em;
         color: var(--muted);
-        font-size: 0.79rem;
+        font-size: 0.82rem;
       }
 
       .design-agent-status.success {
@@ -1369,18 +1372,19 @@
       }
 
       .agent-tabs {
-        margin-top: 12px;
+        margin-top: 14px;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 6px;
+        gap: 10px;
       }
 
       .agent-tab-button {
         border: 1px solid var(--border);
         border-radius: var(--design-radius-pill);
-        padding: 6px 8px;
+        min-height: 48px;
+        padding: 10px 12px;
         font: inherit;
-        font-size: 0.78rem;
+        font-size: 0.86rem;
         font-weight: 700;
         color: var(--text);
         background: var(--surface);
@@ -1394,7 +1398,7 @@
       }
 
       .agent-tab-content {
-        margin-top: 12px;
+        margin-top: 16px;
         display: none;
       }
 
@@ -1406,23 +1410,24 @@
         margin: 0;
         border: 1px dashed var(--border);
         border-radius: var(--design-radius-md);
-        padding: 14px;
+        padding: 16px;
         color: var(--muted);
-        font-size: 0.84rem;
+        font-size: 0.9rem;
       }
 
       .design-proposal-list {
         display: grid;
-        gap: 10px;
+        gap: 14px;
       }
 
       .design-proposal-card {
         border: 1px solid var(--border);
         border-radius: var(--design-radius-md);
-        padding: 10px;
+        padding: 14px;
         background: var(--surface);
         display: grid;
-        gap: 8px;
+        gap: 10px;
+        box-shadow: var(--design-shadow-soft);
       }
 
       .design-proposal-card.selected {
@@ -1432,27 +1437,27 @@
 
       .design-proposal-name {
         margin: 0;
-        font-size: 0.96rem;
+        font-size: 1rem;
         font-weight: 700;
       }
 
       .design-proposal-meta {
         margin: 0;
         color: var(--muted);
-        font-size: 0.75rem;
+        font-size: 0.9rem;
       }
 
       .design-rationale-list {
         margin: 0;
-        padding-left: 18px;
+        padding-left: 22px;
         display: grid;
-        gap: 2px;
-        font-size: 0.82rem;
+        gap: 4px;
+        font-size: 0.84rem;
       }
 
       .design-components {
         margin: 0;
-        font-size: 0.78rem;
+        font-size: 0.86rem;
         color: var(--muted);
       }
 
@@ -1466,12 +1471,13 @@
       .design-preview-button {
         border: 1px solid var(--border);
         border-radius: var(--design-radius-pill);
-        padding: 6px 11px;
+        min-height: 44px;
+        padding: 8px 16px;
         font: inherit;
-        font-size: 0.78rem;
+        font-size: 0.84rem;
         font-weight: 700;
         color: var(--text);
-        background: var(--surface-soft);
+        background: var(--surface);
         cursor: pointer;
       }
 
@@ -1482,46 +1488,46 @@
       .design-selected-label {
         margin: 0;
         color: var(--accent);
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         font-weight: 700;
       }
 
       .design-token-patch {
         margin: 0;
-        max-height: 156px;
+        max-height: 220px;
         overflow: auto;
         border: 1px solid var(--border);
         border-radius: var(--design-radius-sm);
-        padding: 8px;
+        padding: 12px;
         color: var(--text);
-        background: var(--surface-soft);
+        background: #f9fbf9;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
           monospace;
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         line-height: 1.38;
       }
 
       .design-feedback-block {
-        margin-top: 12px;
+        margin-top: 16px;
       }
 
       .design-feedback-label {
         margin: 0 0 5px;
         color: var(--muted);
-        font-size: 0.79rem;
+        font-size: 0.84rem;
         font-weight: 600;
       }
 
       .design-feedback-input {
         width: 100%;
-        min-height: 88px;
+        min-height: 104px;
         border: 1px solid var(--border);
         border-radius: var(--design-radius-md);
-        padding: 9px;
+        padding: 12px;
         color: var(--text);
         background: var(--surface);
         font: inherit;
-        font-size: 0.84rem;
+        font-size: 0.88rem;
         resize: vertical;
       }
 
@@ -1541,12 +1547,13 @@
       .design-tag-button {
         border: 1px solid var(--border);
         border-radius: var(--design-radius-pill);
-        padding: 5px 9px;
+        min-height: 36px;
+        padding: 7px 11px;
         font: inherit;
-        font-size: 0.74rem;
+        font-size: 0.78rem;
         font-weight: 600;
         color: var(--text);
-        background: var(--surface-soft);
+        background: var(--surface);
         cursor: pointer;
       }
 
@@ -1564,21 +1571,22 @@
       .design-history-item {
         border: 1px solid var(--border);
         border-radius: var(--design-radius-md);
-        padding: 10px;
+        padding: 12px;
         background: var(--surface);
+        box-shadow: var(--design-shadow-soft);
       }
 
       .design-history-title {
         margin: 0;
-        font-size: 0.84rem;
+        font-size: 0.9rem;
         font-weight: 700;
       }
 
       .design-history-meta,
       .design-history-feedback {
-        margin: 5px 0 0;
+        margin: 7px 0 0;
         color: var(--muted);
-        font-size: 0.76rem;
+        font-size: 0.82rem;
         line-height: 1.35;
       }
 
@@ -1594,13 +1602,13 @@
       .design-history-event {
         margin: 0;
         color: var(--muted);
-        font-size: 0.75rem;
+        font-size: 0.8rem;
       }
 
       .design-diff-summary {
         margin: 0 0 7px;
         color: var(--muted);
-        font-size: 0.8rem;
+        font-size: 0.86rem;
       }
 
       .design-diff-list {
@@ -1611,7 +1619,7 @@
       }
 
       .design-diff-row {
-        padding: 8px 10px;
+        padding: 12px;
         display: grid;
         gap: 4px;
         border-top: 1px solid var(--border);
@@ -1623,14 +1631,14 @@
 
       .design-diff-key {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: 0.82rem;
         font-weight: 700;
       }
 
       .design-diff-values {
         margin: 0;
         color: var(--muted);
-        font-size: 0.73rem;
+        font-size: 0.8rem;
         line-height: 1.36;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
           monospace;
@@ -1769,8 +1777,12 @@
         }
 
         .agent-hub {
+          top: 0;
+          right: 0;
+          height: 100vh;
           width: 100vw;
           max-width: 100vw;
+          border-radius: 0;
           padding: 14px 12px 20px;
         }
 
@@ -1868,7 +1880,7 @@
             <h2 class="panel-title">Dashboard</h2>
             <div class="dashboard-header-actions">
               <button id="openSheetsButton" class="sheets-link-button" type="button">Åpne Sheets</button>
-              <button id="agentHubOpenButton" class="sheets-link-button agent-hub-toggle" type="button">Agents</button>
+              <button id="agentHubOpenButton" class="sheets-link-button agent-hub-toggle" type="button">Agenter</button>
             </div>
           </div>
           <div class="dashboard-grid">
@@ -2012,56 +2024,56 @@
       </nav>
 
       <div id="agentHubOverlay" class="agent-hub-overlay" aria-hidden="true"></div>
-      <aside id="agentHubPanel" class="agent-hub" aria-hidden="true" aria-label="Agent Hub">
+      <aside id="agentHubPanel" class="agent-hub" aria-hidden="true" aria-label="Agent-hub">
         <header class="agent-hub-header">
           <div>
-            <p class="agent-hub-kicker">Agent Hub</p>
-            <h3 class="agent-hub-title">Design Agent</h3>
+            <p class="agent-hub-kicker">Agent-hub</p>
+            <h3 class="agent-hub-title">Design-agent</h3>
           </div>
           <button id="agentHubCloseButton" class="agent-hub-close" type="button">Lukk</button>
         </header>
 
         <div class="agent-list">
-          <p class="agent-list-label">Available agents</p>
+          <p class="agent-list-label">Tilgjengelige agenter</p>
           <span class="agent-chip">Design</span>
         </div>
 
         <div class="design-status-row">
-          <span id="designStatusIndicator" class="design-status-indicator staging">Staging Active</span>
-          <p id="designRoundIndicator" class="design-round-indicator">Round 0</p>
+          <span id="designStatusIndicator" class="design-status-indicator staging">Staging aktiv</span>
+          <p id="designRoundIndicator" class="design-round-indicator">Runde 0</p>
         </div>
 
         <div class="design-controls">
-          <button id="designGenerateButton" class="design-action-button primary" type="button">Generate 3 proposals</button>
-          <button id="designSaveDraftButton" class="design-action-button" type="button">Save Draft</button>
+          <button id="designGenerateButton" class="design-action-button primary" type="button">Generer 3 forslag</button>
+          <button id="designSaveDraftButton" class="design-action-button" type="button">Lagre utkast</button>
           <button id="designDeployButton" class="design-action-button primary" type="button">Deploy</button>
-          <button id="designResetStagingButton" class="design-action-button" type="button">Reset Staging</button>
-          <button id="designRollbackButton" class="design-action-button" type="button">Rollback</button>
+          <button id="designResetStagingButton" class="design-action-button" type="button">Nullstill staging</button>
+          <button id="designRollbackButton" class="design-action-button" type="button">Rull tilbake</button>
         </div>
 
         <p id="designAgentStatus" class="design-agent-status" role="status" aria-live="polite"></p>
 
         <nav class="agent-tabs" aria-label="Design agent tabs">
-          <button class="agent-tab-button active" type="button" data-agent-tab="proposals">Proposals</button>
-          <button class="agent-tab-button" type="button" data-agent-tab="history">History</button>
+          <button class="agent-tab-button active" type="button" data-agent-tab="proposals">Forslag</button>
+          <button class="agent-tab-button" type="button" data-agent-tab="history">Historikk</button>
           <button class="agent-tab-button" type="button" data-agent-tab="diff">Diff</button>
         </nav>
 
         <section class="agent-tab-content active" data-agent-tab-content="proposals">
           <div id="designProposalList" class="design-proposal-list"></div>
           <div class="design-feedback-block">
-            <p class="design-feedback-label">Feedback</p>
+            <p class="design-feedback-label">Tilbakemelding</p>
             <textarea
               id="designFeedbackInput"
               class="design-feedback-input"
-              placeholder="Describe what to improve for the next round..."
+              placeholder="Beskriv hva du vil forbedre i neste runde..."
             ></textarea>
             <div id="designQuickTags" class="design-quick-tags">
-              <button class="design-tag-button" type="button" data-design-tag="more minimal">more minimal</button>
-              <button class="design-tag-button" type="button" data-design-tag="more contrast">more contrast</button>
-              <button class="design-tag-button" type="button" data-design-tag="bigger typography">bigger typography</button>
-              <button class="design-tag-button" type="button" data-design-tag="softer corners">softer corners</button>
-              <button class="design-tag-button" type="button" data-design-tag="less shadow">less shadow</button>
+              <button class="design-tag-button" type="button" data-design-tag="more minimal">mer minimalistisk</button>
+              <button class="design-tag-button" type="button" data-design-tag="more contrast">mer kontrast</button>
+              <button class="design-tag-button" type="button" data-design-tag="bigger typography">større typografi</button>
+              <button class="design-tag-button" type="button" data-design-tag="softer corners">mykere hjørner</button>
+              <button class="design-tag-button" type="button" data-design-tag="less shadow">mindre skygge</button>
             </div>
           </div>
         </section>
@@ -4788,7 +4800,7 @@
         }
 
         const isStaging = designAgentState.activeEnvironment !== "production";
-        indicator.textContent = isStaging ? "Staging Active" : "Production Active";
+        indicator.textContent = isStaging ? "Staging aktiv" : "Produksjon aktiv";
         indicator.classList.toggle("staging", isStaging);
         indicator.classList.toggle("production", !isStaging);
       }
@@ -4800,7 +4812,7 @@
         }
 
         const round = currentDesignRound();
-        label.textContent = round ? `Round ${round.roundNumber}` : "Round 0";
+        label.textContent = round ? `Runde ${round.roundNumber}` : "Runde 0";
       }
 
       function renderDesignProposalList() {
@@ -4814,7 +4826,7 @@
         if (!round) {
           const empty = document.createElement("p");
           empty.className = "design-empty-state";
-          empty.textContent = "No proposals yet. Click Generate 3 proposals to start the design session.";
+          empty.textContent = "Ingen forslag ennå. Trykk «Generer 3 forslag» for å starte designøkten.";
           container.appendChild(empty);
           return;
         }
@@ -4832,7 +4844,7 @@
 
           const meta = document.createElement("p");
           meta.className = "design-proposal-meta";
-          meta.textContent = `Round ${round.roundNumber}`;
+          meta.textContent = `Runde ${round.roundNumber}`;
 
           const rationaleList = document.createElement("ul");
           rationaleList.className = "design-rationale-list";
@@ -4844,7 +4856,7 @@
 
           const components = document.createElement("p");
           components.className = "design-components";
-          components.textContent = `Affected: ${proposal.affectedComponents.join(", ")}`;
+          components.textContent = `Berørt: ${proposal.affectedComponents.join(", ")}`;
 
           const actions = document.createElement("div");
           actions.className = "design-proposal-actions";
@@ -4854,11 +4866,11 @@
           previewButton.className = "design-preview-button";
           previewButton.setAttribute("data-design-preview-round", round.id);
           previewButton.setAttribute("data-design-preview-id", proposal.id);
-          previewButton.textContent = "Preview";
+          previewButton.textContent = "Forhåndsvis";
 
           const selectedLabel = document.createElement("p");
           selectedLabel.className = "design-selected-label";
-          selectedLabel.textContent = round.selectedProposalId === proposal.id ? "Selected for staging" : "";
+          selectedLabel.textContent = round.selectedProposalId === proposal.id ? "Valgt i staging" : "";
 
           actions.appendChild(previewButton);
           actions.appendChild(selectedLabel);
@@ -4888,7 +4900,7 @@
         if (session.rounds.length === 0 && session.events.length === 0) {
           const empty = document.createElement("p");
           empty.className = "design-empty-state";
-          empty.textContent = "Design history is empty.";
+          empty.textContent = "Designhistorikk er tom.";
           container.appendChild(empty);
           return;
         }
@@ -4902,19 +4914,19 @@
 
             const title = document.createElement("p");
             title.className = "design-history-title";
-            title.textContent = `Round ${round.roundNumber}`;
+            title.textContent = `Runde ${round.roundNumber}`;
 
             const meta = document.createElement("p");
             meta.className = "design-history-meta";
             const selected = round.proposals.find((proposal) => proposal.id === round.selectedProposalId);
             meta.textContent = selected
-              ? `Selected proposal: ${selected.name}`
-              : "Selected proposal: none yet";
+              ? `Valgt forslag: ${selected.name}`
+              : "Valgt forslag: ingen ennå";
 
             const feedback = document.createElement("p");
             feedback.className = "design-history-feedback";
-            const tagsLabel = round.feedbackTags.length > 0 ? `Tags: ${round.feedbackTags.join(", ")}` : "Tags: none";
-            const textLabel = round.feedbackText ? `Feedback: ${round.feedbackText}` : "Feedback: none";
+            const tagsLabel = round.feedbackTags.length > 0 ? `Tagger: ${round.feedbackTags.join(", ")}` : "Tagger: ingen";
+            const textLabel = round.feedbackText ? `Tilbakemelding: ${round.feedbackText}` : "Tilbakemelding: ingen";
             feedback.textContent = `${textLabel} | ${tagsLabel}`;
 
             item.appendChild(title);
@@ -4951,15 +4963,15 @@
         list.textContent = "";
         const diff = buildDesignTokenDiff(designAgentState.productionTokens, designAgentState.stagingTokens);
         if (diff.length === 0) {
-          summary.textContent = "No token changes between staging and production.";
+          summary.textContent = "Ingen token-endringer mellom staging og produksjon.";
           const empty = document.createElement("p");
           empty.className = "design-empty-state";
-          empty.textContent = "Deploy is disabled until staging differs from production.";
+          empty.textContent = "Deploy er deaktivert til staging skiller seg fra produksjon.";
           list.appendChild(empty);
           return;
         }
 
-        summary.textContent = `${diff.length} token change${diff.length === 1 ? "" : "s"} will deploy.`;
+        summary.textContent = `${diff.length} token-endring${diff.length === 1 ? "" : "er"} blir deployet.`;
         diff.forEach((change) => {
           const row = document.createElement("article");
           row.className = "design-diff-row";
@@ -4970,7 +4982,7 @@
 
           const values = document.createElement("p");
           values.className = "design-diff-values";
-          values.textContent = `Production: ${change.before} | Staging: ${change.after}`;
+          values.textContent = `Produksjon: ${change.before} | Staging: ${change.after}`;
 
           row.appendChild(key);
           row.appendChild(values);
@@ -5055,7 +5067,7 @@
         const roundNumber = previousRound ? previousRound.roundNumber + 1 : 1;
 
         setDesignAgentBusy(true);
-        setDesignAgentStatus("Generating design proposals...", "pending");
+        setDesignAgentStatus("Genererer designforslag...", "pending");
 
         try {
           const proposals = enforceDesignProposalSchema(
@@ -5117,12 +5129,12 @@
           persistDesignAgentState();
           applyActiveDesignEnvironmentTokens();
           renderDesignAgent();
-          setDesignAgentStatus(`Round ${roundNumber}: 3 proposals generated.`, "success");
+          setDesignAgentStatus(`Runde ${roundNumber}: 3 forslag generert.`, "success");
         } catch (error) {
           const message =
             error && typeof error.message === "string" && error.message.trim() !== ""
               ? error.message.trim()
-              : "Could not generate proposals";
+              : "Kunne ikke generere forslag";
           setDesignAgentStatus(message, "error");
         } finally {
           setDesignAgentBusy(false);
@@ -5152,16 +5164,16 @@
         persistDesignAgentState();
         applyActiveDesignEnvironmentTokens();
         renderDesignAgent();
-        setDesignAgentStatus(`Preview applied: ${proposal.name}`, "success");
+        setDesignAgentStatus(`Forhåndsvisning aktiv: ${proposal.name}`, "success");
       }
 
       function saveDesignDraft() {
         const round = currentDesignRound();
-        const label = round ? `Saved draft from round ${round.roundNumber}` : "Saved staging draft";
+        const label = round ? `Lagrer utkast fra runde ${round.roundNumber}` : "Lagrer staging-utkast";
         pushDesignSessionEvent("save_draft", label, round ? round.roundNumber : null);
         persistDesignAgentState();
         renderDesignHistory();
-        setDesignAgentStatus("Draft saved to local session history.", "success");
+        setDesignAgentStatus("Utkast lagret i lokal historikk.", "success");
       }
 
       function resetDesignStaging() {
@@ -5171,17 +5183,17 @@
         );
         designAgentState.activeEnvironment = "production";
         const round = currentDesignRound();
-        pushDesignSessionEvent("reset_staging", "Staging reset to current production", round ? round.roundNumber : null);
+        pushDesignSessionEvent("reset_staging", "Staging nullstilt til nåværende produksjon", round ? round.roundNumber : null);
         persistDesignAgentState();
         applyActiveDesignEnvironmentTokens();
         renderDesignAgent();
-        setDesignAgentStatus("Staging reset to production.", "success");
+        setDesignAgentStatus("Staging er nullstilt til produksjon.", "success");
       }
 
       function deployDesignStaging() {
         const diff = buildDesignTokenDiff(designAgentState.productionTokens, designAgentState.stagingTokens);
         if (diff.length === 0) {
-          setDesignAgentStatus("No changes to deploy.", "pending");
+          setDesignAgentStatus("Ingen endringer å deploye.", "pending");
           renderDesignDiff();
           return;
         }
@@ -5203,17 +5215,17 @@
         designAgentState.productionTokens = normalizeDesignTokens(designAgentState.stagingTokens, DEFAULT_DESIGN_TOKENS);
         designAgentState.activeEnvironment = "production";
         const round = currentDesignRound();
-        pushDesignSessionEvent("deploy", `${diff.length} token changes deployed`, round ? round.roundNumber : null);
+        pushDesignSessionEvent("deploy", `${diff.length} token-endringer deployet`, round ? round.roundNumber : null);
         persistDesignAgentState();
         applyActiveDesignEnvironmentTokens();
         renderDesignAgent();
-        setDesignAgentStatus(`Deploy complete. ${diff.length} token changes moved to production.`, "success");
+        setDesignAgentStatus(`Deploy fullført. ${diff.length} token-endringer flyttet til produksjon.`, "success");
       }
 
       function rollbackDesignProduction() {
         const previous = designAgentState.productionHistory.pop();
         if (!previous) {
-          setDesignAgentStatus("No previous production version to rollback.", "pending");
+          setDesignAgentStatus("Ingen tidligere produksjonsversjon å rulle tilbake til.", "pending");
           return;
         }
 
@@ -5232,7 +5244,7 @@
         persistDesignAgentState();
         applyActiveDesignEnvironmentTokens();
         renderDesignAgent();
-        setDesignAgentStatus("Production rolled back to previous version.", "success");
+        setDesignAgentStatus("Produksjon rullet tilbake til forrige versjon.", "success");
       }
 
       function setupDesignAgentPanel() {
