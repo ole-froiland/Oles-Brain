@@ -51,6 +51,24 @@
   force = true
 
 [[redirects]]
+  from = "/steps"
+  to = "/.netlify/functions/steps"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/steps/manual"
+  to = "/.netlify/functions/steps-manual"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/steps/today"
+  to = "/.netlify/functions/steps-today"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/notes/shorten"
   to = "/.netlify/functions/note-shorten"
   status = 200

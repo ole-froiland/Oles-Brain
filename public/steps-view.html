@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Steg | Oles Brain</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,800&family=Work+Sans:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-top: #f8f2e8;
+        --bg-bottom: #e8f0e5;
+        --panel: #ffffff;
+        --surface: #f7faf7;
+        --text: #1f2b1f;
+        --muted: #5d6b5f;
+        --accent: #2d7f56;
+        --accent-pressed: #246545;
+        --border: #d7dfd5;
+        --error: #a73d32;
+      }
+
+      :root[data-theme="dark"] {
+        --bg-top: #0f1419;
+        --bg-bottom: #121a17;
+        --panel: #172229;
+        --surface: #1f2c34;
+        --text: #e8efea;
+        --muted: #9bb1a4;
+        --accent: #44b97a;
+        --accent-pressed: #379b66;
+        --border: #2d3a32;
+        --error: #ff8d82;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 20px;
+        display: grid;
+        place-items: center;
+        font-family: "Work Sans", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.8), transparent 38%),
+          radial-gradient(circle at 85% 85%, rgba(194, 221, 198, 0.58), transparent 45%),
+          linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+      }
+
+      main {
+        width: min(720px, 100%);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--panel);
+        padding: 18px;
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: "Fraunces", serif;
+        font-size: clamp(1.8rem, 4vw, 2.4rem);
+        line-height: 1.05;
+      }
+
+      .back-link {
+        border: 1px solid var(--accent);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #ffffff;
+        background: var(--accent);
+        text-decoration: none;
+      }
+
+      .back-link:hover {
+        background: var(--accent-pressed);
+      }
+
+      .lead {
+        margin: 8px 0 14px;
+        color: var(--muted);
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: 8px;
+      }
+
+      label {
+        display: grid;
+        gap: 4px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      input[type="date"] {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font: inherit;
+        color: var(--text);
+        background: var(--panel);
+      }
+
+      button {
+        border: 1px solid var(--accent);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font: inherit;
+        font-weight: 700;
+        color: #ffffff;
+        background: var(--accent);
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: var(--accent-pressed);
+      }
+
+      .data-card {
+        margin-top: 14px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        background: var(--surface);
+        display: grid;
+        gap: 8px;
+      }
+
+      .step-value {
+        margin: 0;
+        font-size: clamp(1.45rem, 4vw, 2.1rem);
+        font-weight: 700;
+      }
+
+      .meta {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .status {
+        min-height: 1.2em;
+        margin-top: 10px;
+        color: var(--muted);
+      }
+
+      .status.error {
+        color: var(--error);
+      }
+
+      .shortcut-card {
+        margin-top: 14px;
+        border: 1px dashed var(--border);
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .shortcut-card h2 {
+        margin: 0 0 8px;
+        font-family: "Fraunces", serif;
+        font-size: 1.2rem;
+      }
+
+      .shortcut-card p {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      code {
+        display: block;
+        overflow-wrap: anywhere;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px;
+        font-size: 0.82rem;
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 12px;
+        }
+
+        main {
+          padding: 14px;
+        }
+
+        .top {
+          align-items: start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="top">
+        <h1>Steg</h1>
+        <a class="back-link" href="/">Til dashboard</a>
+      </header>
+
+      <p class="lead">Viser lagret stegdata for valgt dato.</p>
+
+      <section class="controls" aria-label="Steg-kontroller">
+        <label for="stepsDate">
+          Dato
+          <input id="stepsDate" type="date" />
+        </label>
+        <button id="refreshButton" type="button">Hent steg</button>
+      </section>
+
+      <section class="data-card" aria-live="polite">
+        <p id="stepValue" class="step-value">-</p>
+        <p id="stepSource" class="meta">Kilde: -</p>
+        <p id="stepCreatedAt" class="meta">Sist lagret: -</p>
+      </section>
+
+      <p id="status" class="status" role="status"></p>
+
+      <section class="shortcut-card">
+        <h2>Riktig Shortcut URL</h2>
+        <p>Bruk denne i `Hent innhold på URL` (POST + JSON):</p>
+        <code id="shortcutPostUrl"></code>
+      </section>
+    </main>
+
+    <script>
+      function dateToLocalIso(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function formatStepCount(value) {
+        const parsed = Number(value);
+        if (!Number.isInteger(parsed) || parsed < 0) {
+          return "Ikke registrert";
+        }
+
+        return `${new Intl.NumberFormat("nb-NO").format(parsed)} steg`;
+      }
+
+      function formatSavedAt(value) {
+        if (typeof value !== "string" || value.trim() === "") {
+          return "-";
+        }
+
+        const normalized = value.includes("T") ? value : value.replace(" ", "T");
+        const parsed = new Date(normalized);
+        if (Number.isNaN(parsed.getTime())) {
+          return value;
+        }
+
+        return parsed.toLocaleString("nb-NO", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function setStatus(text, isError) {
+        const status = document.getElementById("status");
+        if (!status) {
+          return;
+        }
+
+        status.textContent = text || "";
+        status.classList.toggle("error", Boolean(isError));
+      }
+
+      async function loadSteps(date) {
+        const stepValue = document.getElementById("stepValue");
+        const stepSource = document.getElementById("stepSource");
+        const stepCreatedAt = document.getElementById("stepCreatedAt");
+        const refreshButton = document.getElementById("refreshButton");
+
+        if (!stepValue || !stepSource || !stepCreatedAt || !refreshButton) {
+          return;
+        }
+
+        refreshButton.disabled = true;
+        setStatus("Henter stegdata...", false);
+
+        try {
+          const response = await fetch(`/steps/today?date=${encodeURIComponent(date)}`, { cache: "no-store" });
+          const body = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(body.error || "Kunne ikke hente steg");
+          }
+
+          stepValue.textContent = formatStepCount(body.total_steps);
+          stepSource.textContent = `Kilde: ${body.source ? body.source : "-"}`;
+          stepCreatedAt.textContent = `Sist lagret: ${formatSavedAt(body.created_at)}`;
+          setStatus(body.has_data ? "Steg lastet." : "Ingen steg registrert for valgt dato ennå.", false);
+        } catch (error) {
+          stepValue.textContent = "Feil";
+          stepSource.textContent = "Kilde: -";
+          stepCreatedAt.textContent = "Sist lagret: -";
+          setStatus(error && error.message ? error.message : "Kunne ikke hente steg", true);
+        } finally {
+          refreshButton.disabled = false;
+        }
+      }
+
+      function setupShortcutUrl() {
+        const code = document.getElementById("shortcutPostUrl");
+        if (!code) {
+          return;
+        }
+
+        const base = window.location.origin.replace(/\/$/, "");
+        code.textContent = `${base}/steps?key=DIN_KEY`;
+      }
+
+      function setupThemeFromMainApp() {
+        try {
+          const savedTheme = localStorage.getItem("oles-brain-theme");
+          document.documentElement.setAttribute("data-theme", savedTheme === "dark" ? "dark" : "light");
+        } catch (_) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      }
+
+      function setupPage() {
+        setupThemeFromMainApp();
+        setupShortcutUrl();
+
+        const dateInput = document.getElementById("stepsDate");
+        const refreshButton = document.getElementById("refreshButton");
+        if (!dateInput || !refreshButton) {
+          return;
+        }
+
+        const today = dateToLocalIso(new Date());
+        dateInput.value = today;
+
+        refreshButton.addEventListener("click", () => {
+          void loadSteps(dateInput.value || today);
+        });
+
+        dateInput.addEventListener("change", () => {
+          void loadSteps(dateInput.value || today);
+        });
+
+        void loadSteps(today);
+      }
+
+      setupPage();
+    </script>
+  </body>
+</html>

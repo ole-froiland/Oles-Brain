@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 3000;
 const CSV_KEY = process.env.CSV_KEY || "DIN_KEY";
 const RESET_KEY = process.env.RESET_KEY || CSV_KEY;
 const SCREEN_TIME_KEY = process.env.SCREEN_TIME_KEY || CSV_KEY;
+const STEPS_KEY = process.env.STEPS_KEY || process.env.STEP_COUNT_KEY || SCREEN_TIME_KEY;
 const OPENAI_API_KEY = typeof process.env.OPENAI_API_KEY === "string" ? process.env.OPENAI_API_KEY.trim() : "";
 const OPENAI_NOTE_MODEL = process.env.OPENAI_NOTE_MODEL || "gpt-4.1-mini";
 const SB1_API_BASE =
@@ -51,6 +52,16 @@ db.serialize(() => {
       date TEXT NOT NULL,
       total_minutes INTEGER NOT NULL CHECK (total_minutes >= 0),
       pickups INTEGER CHECK (pickups >= 0),
+      source TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS step_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      total_steps INTEGER NOT NULL CHECK (total_steps >= 0),
       source TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
@@ -255,9 +266,41 @@ function normalizeScreenTimePayload(payload) {
   };
 }
 
+function normalizeStepsPayload(payload) {
+  const { date, total_steps: totalStepsRaw, source } = payload || {};
+  const dateValue = date === undefined || date === null || date === "" ? todayDateString() : date;
+
+  if (!isValidDateString(dateValue) || !isNonNegativeInteger(totalStepsRaw) || !isValidSource(source)) {
+    return { error: "Ugyldig payload" };
+  }
+
+  return {
+    value: {
+      date: dateValue,
+      totalSteps: totalStepsRaw,
+      source: typeof source === "string" && source.trim() !== "" ? source.trim() : null
+    }
+  };
+}
+
 function screenTimeKeyFromRequest(req) {
   const queryKey = req.query && req.query.key;
   const headerKey = req.get("x-screen-time-key");
+
+  if (typeof queryKey === "string" && queryKey.trim() !== "") {
+    return queryKey.trim();
+  }
+
+  if (typeof headerKey === "string" && headerKey.trim() !== "") {
+    return headerKey.trim();
+  }
+
+  return "";
+}
+
+function stepsKeyFromRequest(req) {
+  const queryKey = req.query && req.query.key;
+  const headerKey = req.get("x-steps-key");
 
   if (typeof queryKey === "string" && queryKey.trim() !== "") {
     return queryKey.trim();
@@ -322,6 +365,66 @@ function upsertScreenTimeEntry(res, payload) {
       function onInsert(insertErr) {
         if (insertErr) {
           res.status(500).json({ error: "Kunne ikke lagre skjermtid" });
+          return;
+        }
+
+        respondSaved(this.lastID, 201);
+      }
+    );
+  });
+}
+
+function upsertStepsEntry(res, payload) {
+  const { date, totalSteps, source } = payload;
+
+  db.get("SELECT id FROM step_entries WHERE date = ? ORDER BY id DESC LIMIT 1", [date], (selectErr, row) => {
+    if (selectErr) {
+      res.status(500).json({ error: "Kunne ikke lagre steg" });
+      return;
+    }
+
+    const respondSaved = (id, statusCode) => {
+      res.status(statusCode).json({
+        id,
+        date,
+        total_steps: totalSteps,
+        source
+      });
+    };
+
+    const existingId = Number(row && row.id);
+    if (Number.isFinite(existingId)) {
+      db.run(
+        `
+          UPDATE step_entries
+          SET total_steps = ?, source = ?, created_at = datetime('now')
+          WHERE id = ?
+        `,
+        [totalSteps, source, existingId],
+        (updateErr) => {
+          if (updateErr) {
+            res.status(500).json({ error: "Kunne ikke lagre steg" });
+            return;
+          }
+
+          db.run("DELETE FROM step_entries WHERE date = ? AND id <> ?", [date, existingId], (deleteErr) => {
+            if (deleteErr) {
+              console.error("Kunne ikke rydde steg-duplikater for dato:", date, deleteErr.message);
+            }
+
+            respondSaved(existingId, 200);
+          });
+        }
+      );
+      return;
+    }
+
+    db.run(
+      "INSERT INTO step_entries (date, total_steps, source) VALUES (?, ?, ?)",
+      [date, totalSteps, source],
+      function onInsert(insertErr) {
+        if (insertErr) {
+          res.status(500).json({ error: "Kunne ikke lagre steg" });
           return;
         }
 
@@ -703,6 +806,72 @@ app.get("/screen-time/today", (req, res) => {
         date,
         total_minutes: row ? Number(row.total_minutes) : null,
         pickups: row && row.pickups !== null && row.pickups !== undefined ? Number(row.pickups) : null,
+        source: row && typeof row.source === "string" ? row.source : "",
+        created_at: row && typeof row.created_at === "string" ? row.created_at : null,
+        has_data: Boolean(row)
+      });
+    }
+  );
+});
+
+app.post("/steps", (req, res) => {
+  const key = stepsKeyFromRequest(req);
+  if (key !== STEPS_KEY) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const normalized = normalizeStepsPayload(req.body);
+  if (normalized.error) {
+    res.status(400).json({ error: normalized.error });
+    return;
+  }
+
+  upsertStepsEntry(res, normalized.value);
+});
+
+app.post("/steps/manual", (req, res) => {
+  const normalized = normalizeStepsPayload(req.body);
+  if (normalized.error) {
+    res.status(400).json({ error: normalized.error });
+    return;
+  }
+
+  upsertStepsEntry(res, {
+    ...normalized.value,
+    source: normalized.value.source || "manual-ui"
+  });
+});
+
+app.get("/steps/today", (req, res) => {
+  const date = req.query.date || todayDateString();
+
+  if (!isValidDateString(date)) {
+    res.status(400).json({ error: "Ugyldig dato" });
+    return;
+  }
+
+  db.get(
+    `
+      SELECT
+        total_steps,
+        COALESCE(source, '') AS source,
+        created_at
+      FROM step_entries
+      WHERE date = ?
+      ORDER BY id DESC
+      LIMIT 1
+    `,
+    [date],
+    (err, row) => {
+      if (err) {
+        res.status(500).json({ error: "Kunne ikke hente steg" });
+        return;
+      }
+
+      res.status(200).json({
+        date,
+        total_steps: row ? Number(row.total_steps) : null,
         source: row && typeof row.source === "string" ? row.source : "",
         created_at: row && typeof row.created_at === "string" ? row.created_at : null,
         has_data: Boolean(row)
