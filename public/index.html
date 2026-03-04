@@ -181,28 +181,270 @@
       }
 
       .maker-root {
-        width: min(760px, 94vw);
+        width: min(1380px, 97vw);
+        min-height: min(92vh, 960px);
+        max-height: min(92vh, 960px);
+        padding: 0;
+        border: 1px solid #e8e8ec;
+        border-radius: 20px;
+        background: #ffffff;
+        box-shadow: 0 14px 36px rgba(24, 24, 27, 0.1);
+        overflow: hidden;
       }
 
-      .maker-panel {
-        margin-top: 14px;
-        border: 1px solid var(--border);
+      .maker-shell {
+        display: grid;
+        grid-template-columns: 258px minmax(0, 1fr);
+        width: 100%;
+        height: 100%;
+      }
+
+      .maker-sidebar {
+        background: #f7f7f8;
+        border-right: 1px solid #ececf1;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .maker-new-chat {
+        border: 1px solid #d7d7dd;
+        border-radius: 12px;
+        padding: 9px 12px;
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-align: left;
+        color: #171717;
+        background: #ffffff;
+        cursor: pointer;
+      }
+
+      .maker-new-chat:hover {
+        border-color: #bfc0c7;
+      }
+
+      #makerNewChatButtonMobile {
+        display: none;
+      }
+
+      .maker-sidebar-label {
+        margin: 4px 2px 0;
+        color: #6f6f76;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .maker-thread-list {
+        display: grid;
+        align-content: start;
+        gap: 6px;
+        overflow: auto;
+      }
+
+      .maker-thread-button {
+        border: 1px solid transparent;
+        border-radius: 10px;
+        padding: 10px 11px;
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 500;
+        text-align: left;
+        color: #29292d;
+        background: transparent;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .maker-thread-button:hover {
+        background: #ececf1;
+      }
+
+      .maker-thread-button.active {
+        border-color: #d4d4db;
+        background: #ffffff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      .maker-sidebar-spacer {
+        flex: 1;
+      }
+
+      .maker-sidebar-back {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .maker-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+      }
+
+      .maker-topbar {
+        height: 56px;
+        border-bottom: 1px solid #ececf1;
+        padding: 0 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .maker-topbar-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1f1f23;
+      }
+
+      .maker-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #0ea5e9;
+      }
+
+      .maker-topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .maker-top-action {
+        border: 1px solid #d5d5dd;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font: inherit;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #202028;
+        background: #ffffff;
+        cursor: pointer;
+      }
+
+      .maker-top-action:hover {
+        border-color: #c2c2ca;
+      }
+
+      .maker-messages {
+        flex: 1;
+        overflow: auto;
+        padding: 22px 20px 24px;
+        display: grid;
+        align-content: start;
+        gap: 18px;
+      }
+
+      .maker-message {
+        width: min(860px, 100%);
+        margin: 0 auto;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .maker-message-user {
+        flex-direction: row-reverse;
+      }
+
+      .maker-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .maker-message-assistant .maker-avatar {
+        border: 1px solid #d9e8f0;
+        color: #05608e;
+        background: #e8f5fb;
+      }
+
+      .maker-message-user .maker-avatar {
+        border: 1px solid #d8d8df;
+        color: #2f2f35;
+        background: #f3f4f6;
+      }
+
+      .maker-bubble {
+        max-width: min(740px, 100%);
+        border: 1px solid #e8e8ee;
         border-radius: 16px;
-        padding: 20px;
-        background: var(--panel);
+        padding: 11px 13px;
+        color: #19191d;
+        background: #ffffff;
+        font-size: 0.95rem;
+        line-height: 1.45;
+        white-space: pre-wrap;
       }
 
-      .maker-title {
-        margin: 0;
-        font-family: "Fraunces", serif;
-        font-size: clamp(1.8rem, 4vw, 2.4rem);
-        line-height: 1.05;
+      .maker-message-user .maker-bubble {
+        background: #f6f7f9;
       }
 
-      .maker-description {
-        margin: 10px 0 0;
-        color: var(--muted);
-        font-size: 1rem;
+      .maker-composer {
+        position: relative;
+        border-top: 1px solid #ececf1;
+        background: linear-gradient(180deg, #fcfcfd 0%, #ffffff 26%);
+        padding: 14px 20px 20px;
+      }
+
+      .maker-input {
+        width: 100%;
+        min-height: 52px;
+        max-height: 180px;
+        border: 1px solid #d8d8df;
+        border-radius: 16px;
+        padding: 13px 56px 13px 13px;
+        color: #1f1f24;
+        background: #ffffff;
+        font: inherit;
+        font-size: 0.96rem;
+        line-height: 1.4;
+        resize: none;
+      }
+
+      .maker-input:focus {
+        outline: none;
+        border-color: #b9bbc5;
+        box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.08);
+      }
+
+      .maker-composer-actions {
+        position: absolute;
+        right: 30px;
+        bottom: 30px;
+      }
+
+      .maker-send {
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 10px;
+        font: inherit;
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: #ffffff;
+        background: #111827;
+        cursor: pointer;
+      }
+
+      .maker-send:disabled {
+        opacity: 0.48;
+        cursor: not-allowed;
       }
 
       .card {
@@ -946,6 +1188,10 @@
         .panel {
           min-height: clamp(540px, 68vh, 760px);
         }
+
+        .maker-shell {
+          grid-template-columns: 220px minmax(0, 1fr);
+        }
       }
 
       @media (max-width: 760px) {
@@ -1030,6 +1276,65 @@
 
         .mobile-page-nav {
           display: flex;
+        }
+
+        .maker-root {
+          max-height: none;
+          border-radius: 0;
+          box-shadow: none;
+        }
+
+        .maker-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .maker-sidebar {
+          border-right: 0;
+          border-bottom: 1px solid #ececf1;
+          padding: 10px 12px;
+          display: grid;
+          grid-template-columns: 1fr auto auto;
+          align-items: center;
+          gap: 8px;
+        }
+
+        #makerNewChatButton {
+          display: none;
+        }
+
+        #makerNewChatButtonMobile {
+          display: block;
+          width: auto;
+          text-align: center;
+          padding: 8px 10px;
+        }
+
+        .maker-sidebar-label,
+        .maker-thread-list,
+        .maker-sidebar-spacer,
+        .maker-sidebar-back {
+          display: none;
+        }
+
+        .maker-topbar {
+          padding: 0 12px;
+        }
+
+        .maker-messages {
+          padding: 14px 12px 18px;
+        }
+
+        .maker-message {
+          width: 100%;
+        }
+
+        .maker-composer {
+          padding: 12px;
+        }
+
+        .maker-composer-actions {
+          right: 22px;
+          bottom: 22px;
         }
       }
     </style>
@@ -1200,10 +1505,38 @@
     </main>
 
     <main id="makerRoot" class="card app-root maker-root" aria-hidden="true">
-      <button class="launcher-back-button" type="button" data-close-launcher>Tilbake</button>
-      <section class="maker-panel" aria-label="Maker app">
-        <h1 class="maker-title">Maker</h1>
-        <p class="maker-description">Ny app er klar. Si fra hva du vil at Maker skal gjøre, så bygger jeg den videre.</p>
+      <section class="maker-shell" aria-label="Maker app">
+        <aside class="maker-sidebar" aria-label="Samtaler">
+          <button id="makerNewChatButton" class="maker-new-chat" type="button">+ Ny chat</button>
+          <button id="makerNewChatButtonMobile" class="maker-new-chat" type="button">Ny</button>
+          <p class="maker-sidebar-label">Samtaler</p>
+          <div id="makerThreadList" class="maker-thread-list" role="list"></div>
+          <div class="maker-sidebar-spacer"></div>
+          <button class="launcher-back-button maker-sidebar-back" type="button" data-close-launcher>Til startside</button>
+        </aside>
+
+        <section class="maker-main">
+          <header class="maker-topbar">
+            <div class="maker-topbar-title">
+              <span class="maker-dot" aria-hidden="true"></span>
+              <span>Maker</span>
+            </div>
+            <div class="maker-topbar-actions">
+              <button id="makerNewChatButtonTop" class="maker-top-action" type="button">Ny chat</button>
+              <button class="launcher-back-button" type="button" data-close-launcher>Tilbake</button>
+            </div>
+          </header>
+
+          <section id="makerMessages" class="maker-messages" aria-live="polite"></section>
+
+          <form id="makerComposer" class="maker-composer">
+            <label class="visually-hidden" for="makerInput">Melding til Maker</label>
+            <textarea id="makerInput" class="maker-input" rows="1" placeholder="Message Maker..."></textarea>
+            <div class="maker-composer-actions">
+              <button id="makerSendButton" class="maker-send" type="submit">↑</button>
+            </div>
+          </form>
+        </section>
       </section>
     </main>
 
@@ -1228,6 +1561,8 @@
         "oles-brain": "dashboardRoot",
         maker: "makerRoot"
       });
+      const MAKER_WELCOME_MESSAGE =
+        "Hei! Jeg er Maker. Layouten er nå satt opp som en ChatGPT-lignende arbeidsflate. Skriv hva du vil bygge.";
       const MAN_UTD_TEAM_ID = "360";
       const MAN_UTD_CORE_API_BASE = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/eng.1";
       let selectedDate = formatDateToday();
@@ -1246,6 +1581,9 @@
       let bankBusy = false;
       let bankSelectedAccountKey = "";
       let bankAccounts = [];
+      let makerThreads = [];
+      let makerActiveThreadId = "";
+      let makerThreadSequence = 0;
 
       function emptyDoneState() {
         return {
@@ -2844,6 +3182,219 @@
         setActiveButton(activeIndex);
       }
 
+      function makerActiveThread() {
+        return makerThreads.find((thread) => thread.id === makerActiveThreadId) || null;
+      }
+
+      function makerThreadTitleFromText(text) {
+        const compact = String(text || "")
+          .trim()
+          .replace(/\s+/g, " ");
+        if (!compact) {
+          return "";
+        }
+
+        const maxLength = 30;
+        return compact.length > maxLength ? `${compact.slice(0, maxLength - 1)}…` : compact;
+      }
+
+      function makerRenderThreadList() {
+        const threadList = document.getElementById("makerThreadList");
+        if (!threadList) {
+          return;
+        }
+
+        threadList.textContent = "";
+        const fragment = document.createDocumentFragment();
+        makerThreads.forEach((thread) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "maker-thread-button";
+          button.setAttribute("data-thread-id", thread.id);
+          if (thread.id === makerActiveThreadId) {
+            button.classList.add("active");
+          }
+          button.textContent = thread.title;
+          fragment.appendChild(button);
+        });
+
+        threadList.appendChild(fragment);
+      }
+
+      function makerRenderMessages() {
+        const messagesContainer = document.getElementById("makerMessages");
+        const thread = makerActiveThread();
+        if (!messagesContainer || !thread) {
+          return;
+        }
+
+        messagesContainer.textContent = "";
+        const fragment = document.createDocumentFragment();
+
+        thread.messages.forEach((message) => {
+          const row = document.createElement("article");
+          row.className = `maker-message maker-message-${message.role === "user" ? "user" : "assistant"}`;
+
+          const avatar = document.createElement("span");
+          avatar.className = "maker-avatar";
+          avatar.textContent = message.role === "user" ? "U" : "M";
+
+          const bubble = document.createElement("div");
+          bubble.className = "maker-bubble";
+          bubble.textContent = message.text;
+
+          row.appendChild(avatar);
+          row.appendChild(bubble);
+          fragment.appendChild(row);
+        });
+
+        messagesContainer.appendChild(fragment);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      function makerCreateThread() {
+        makerThreadSequence += 1;
+        const thread = {
+          id: `maker-thread-${Date.now()}-${makerThreadSequence}`,
+          title: `Ny chat ${makerThreadSequence}`,
+          messages: [
+            {
+              role: "assistant",
+              text: MAKER_WELCOME_MESSAGE
+            }
+          ]
+        };
+
+        makerThreads = [thread, ...makerThreads];
+        makerActiveThreadId = thread.id;
+        makerRenderThreadList();
+        makerRenderMessages();
+        return thread;
+      }
+
+      function makerAutoResizeInput() {
+        const input = document.getElementById("makerInput");
+        if (!(input instanceof HTMLTextAreaElement)) {
+          return;
+        }
+
+        input.style.height = "auto";
+        input.style.height = `${Math.min(input.scrollHeight, 180)}px`;
+      }
+
+      function makerUpdateSendButtonState() {
+        const input = document.getElementById("makerInput");
+        const sendButton = document.getElementById("makerSendButton");
+        if (!(input instanceof HTMLTextAreaElement) || !(sendButton instanceof HTMLButtonElement)) {
+          return;
+        }
+
+        sendButton.disabled = input.value.trim() === "";
+      }
+
+      function makerAssistantReplyFromPrompt(promptText) {
+        return `Mottatt. Jeg kan hjelpe deg bygge dette i Maker:\n- ${promptText}\n\nSkriv neste steg, så fortsetter vi.`;
+      }
+
+      function setupMakerApp() {
+        const threadList = document.getElementById("makerThreadList");
+        const composer = document.getElementById("makerComposer");
+        const input = document.getElementById("makerInput");
+        const newChatButtons = [
+          document.getElementById("makerNewChatButton"),
+          document.getElementById("makerNewChatButtonMobile"),
+          document.getElementById("makerNewChatButtonTop")
+        ].filter((button) => button instanceof HTMLButtonElement);
+
+        if (!(threadList instanceof HTMLElement) || !(composer instanceof HTMLFormElement) || !(input instanceof HTMLTextAreaElement)) {
+          return;
+        }
+
+        if (makerThreads.length === 0) {
+          makerCreateThread();
+        } else {
+          makerRenderThreadList();
+          makerRenderMessages();
+        }
+
+        threadList.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) {
+            return;
+          }
+
+          const threadButton = target.closest("[data-thread-id]");
+          if (!threadButton) {
+            return;
+          }
+
+          const threadId = String(threadButton.getAttribute("data-thread-id") || "");
+          const nextThread = makerThreads.find((thread) => thread.id === threadId);
+          if (!nextThread) {
+            return;
+          }
+
+          makerActiveThreadId = nextThread.id;
+          makerRenderThreadList();
+          makerRenderMessages();
+          input.focus();
+        });
+
+        newChatButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            makerCreateThread();
+            input.value = "";
+            makerAutoResizeInput();
+            makerUpdateSendButtonState();
+            input.focus();
+          });
+        });
+
+        input.addEventListener("input", () => {
+          makerAutoResizeInput();
+          makerUpdateSendButtonState();
+        });
+
+        composer.addEventListener("submit", (event) => {
+          event.preventDefault();
+
+          const promptText = input.value.trim();
+          if (!promptText) {
+            return;
+          }
+
+          const thread = makerActiveThread() || makerCreateThread();
+          const userMessages = thread.messages.filter((message) => message.role === "user");
+
+          thread.messages.push({
+            role: "user",
+            text: promptText
+          });
+
+          if (userMessages.length === 0) {
+            const nextTitle = makerThreadTitleFromText(promptText);
+            if (nextTitle) {
+              thread.title = nextTitle;
+            }
+          }
+
+          thread.messages.push({
+            role: "assistant",
+            text: makerAssistantReplyFromPrompt(promptText)
+          });
+
+          input.value = "";
+          makerRenderThreadList();
+          makerRenderMessages();
+          makerAutoResizeInput();
+          makerUpdateSendButtonState();
+          input.focus();
+        });
+
+        makerAutoResizeInput();
+        makerUpdateSendButtonState();
+      }
+
       function hideAllLauncherApps() {
         const appRoots = document.querySelectorAll(".app-root");
         appRoots.forEach((root) => {
@@ -2872,6 +3423,13 @@
         launcherScreen.setAttribute("aria-hidden", "true");
         appRoot.removeAttribute("aria-hidden");
         document.body.classList.remove("launcher-mode");
+
+        if (appId === "maker") {
+          const makerInput = document.getElementById("makerInput");
+          if (makerInput instanceof HTMLElement) {
+            makerInput.focus();
+          }
+        }
       }
 
       function closeLauncherApp() {
@@ -2917,6 +3475,7 @@
       }
 
       setupLauncher();
+      setupMakerApp();
       setupTheme();
       setupDateControls();
       setupMonthCalendar();
