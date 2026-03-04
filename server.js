@@ -10,6 +10,7 @@ const RESET_KEY = process.env.RESET_KEY || CSV_KEY;
 const SCREEN_TIME_KEY = process.env.SCREEN_TIME_KEY || CSV_KEY;
 const OPENAI_API_KEY = typeof process.env.OPENAI_API_KEY === "string" ? process.env.OPENAI_API_KEY.trim() : "";
 const OPENAI_NOTE_MODEL = process.env.OPENAI_NOTE_MODEL || "gpt-4.1-mini";
+const OPENAI_MAKER_MODEL = process.env.OPENAI_MAKER_MODEL || "gpt-4.1";
 const SB1_API_BASE =
   typeof process.env.SB1_API_BASE === "string" && process.env.SB1_API_BASE.trim() !== ""
     ? process.env.SB1_API_BASE.trim()
@@ -430,6 +431,96 @@ function extractResponseOutputText(data) {
   return pieces.join(" ").trim();
 }
 
+const MAKER_SYSTEM_INSTRUCTIONS = `
+Du er Maker, en avansert AI-assistent for idéarbeid, planlegging, koding og prompt engineering.
+Skriv alltid på samme språk som brukeren.
+
+Arbeidsflyt:
+1) Når brukeren ber om hjelp til noe nytt: still nøyaktig 3 korte, enkle og relevante avklaringsspørsmål (nummerert 1-3).
+2) Når brukeren svarer på spørsmålene: lag én superproff, ferdig prompt de kan bruke direkte.
+
+Kvalitetskrav:
+- Vær konkret, praktisk og tydelig.
+- Tenk grundig internt, men ikke vis intern resonnementstekst.
+- Ikke bruk fyllord. Ingen unødvendige forbehold.
+- Hvis informasjon mangler, gjør rimelige antagelser og marker dem tydelig.
+`.trim();
+
+function normalizeMakerText(value) {
+  return String(value || "").replace(/\r\n/g, "\n").trim();
+}
+
+function normalizeMakerMessages(payloadMessages) {
+  if (!Array.isArray(payloadMessages)) {
+    return { error: "Ugyldig payload" };
+  }
+
+  const normalized = payloadMessages
+    .map((item) => {
+      const role = item && typeof item.role === "string" ? item.role.trim() : "";
+      const textRaw = item && typeof item.text === "string" ? item.text : "";
+      const text = normalizeMakerText(textRaw);
+      return { role, text };
+    })
+    .filter((item) => (item.role === "user" || item.role === "assistant") && item.text !== "");
+
+  if (normalized.length === 0) {
+    return { error: "Ugyldig payload" };
+  }
+
+  const clipped = normalized.slice(-20).map((item) => ({
+    role: item.role,
+    text: item.text.slice(0, 5000)
+  }));
+
+  return { value: clipped };
+}
+
+function makerMessagesToInput(messages) {
+  return messages
+    .map((message) => `${message.role === "assistant" ? "Assistant" : "User"}: ${message.text}`)
+    .join("\n\n");
+}
+
+async function generateMakerReplyWithOpenAI(messages) {
+  if (!OPENAI_API_KEY || typeof fetch !== "function") {
+    const err = new Error("Maker AI er ikke konfigurert (mangler OPENAI_API_KEY)");
+    err.statusCode = 503;
+    throw err;
+  }
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: OPENAI_MAKER_MODEL,
+      instructions: MAKER_SYSTEM_INSTRUCTIONS,
+      input: makerMessagesToInput(messages),
+      max_output_tokens: 900,
+      temperature: 0.5
+    })
+  });
+
+  if (!response.ok) {
+    const err = new Error(`Maker AI svarte ${response.status}`);
+    err.statusCode = response.status;
+    throw err;
+  }
+
+  const data = await response.json();
+  const outputText = extractResponseOutputText(data);
+  if (!outputText) {
+    const err = new Error("Maker AI returnerte tomt svar");
+    err.statusCode = 502;
+    throw err;
+  }
+
+  return outputText;
+}
+
 async function shortenNoteWithOpenAI(rawText) {
   if (!OPENAI_API_KEY || typeof fetch !== "function") {
     return null;
@@ -486,6 +577,27 @@ app.post("/notes/shorten", async (req, res) => {
   }
 
   res.status(200).json({ short_text: shortText });
+});
+
+app.post("/maker/chat", async (req, res) => {
+  const normalized = normalizeMakerMessages(req.body && req.body.messages);
+  if (normalized.error) {
+    res.status(400).json({ error: normalized.error });
+    return;
+  }
+
+  try {
+    const reply = await generateMakerReplyWithOpenAI(normalized.value);
+    res.status(200).json({
+      reply,
+      model: OPENAI_MAKER_MODEL
+    });
+  } catch (err) {
+    const statusCode = err && err.statusCode ? err.statusCode : 500;
+    const message = err && err.message ? err.message : "Maker AI feilet";
+    console.error("Maker AI-feil:", message);
+    res.status(statusCode).json({ error: message });
+  }
 });
 
 app.post("/entries", (req, res) => {

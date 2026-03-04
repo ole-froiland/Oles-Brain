@@ -1557,12 +1557,13 @@
       const NOTE_SHORTEN_ENDPOINT = "/notes/shorten";
       const BANK_ACCOUNTS_ENDPOINT = "/bank/accounts";
       const BANK_TRANSACTIONS_ENDPOINT = "/bank/transactions";
+      const MAKER_CHAT_ENDPOINT = "/maker/chat";
       const LAUNCHER_APP_ROOT_IDS = Object.freeze({
         "oles-brain": "dashboardRoot",
         maker: "makerRoot"
       });
       const MAKER_WELCOME_MESSAGE =
-        "Hei! Jeg er Maker. Skriv hva du vil lage, så får du alltid 3 enkle spørsmål først. Deretter bygger jeg en superproff prompt basert på svarene dine.";
+        "Hei! Jeg er Maker AI. Skriv hva du vil lage, så hjelper jeg deg med høy kvalitet.";
       const MAN_UTD_TEAM_ID = "360";
       const MAN_UTD_CORE_API_BASE = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/eng.1";
       let selectedDate = formatDateToday();
@@ -1584,6 +1585,7 @@
       let makerThreads = [];
       let makerActiveThreadId = "";
       let makerThreadSequence = 0;
+      let makerRequestInFlight = false;
 
       function emptyDoneState() {
         return {
@@ -3257,9 +3259,6 @@
         const thread = {
           id: `maker-thread-${Date.now()}-${makerThreadSequence}`,
           title: `Ny chat ${makerThreadSequence}`,
-          awaitingPromptAnswers: false,
-          pendingPromptRequest: "",
-          pendingPromptQuestions: [],
           messages: [
             {
               role: "assistant",
@@ -3292,96 +3291,68 @@
           return;
         }
 
-        sendButton.disabled = input.value.trim() === "";
+        sendButton.disabled = makerRequestInFlight || input.value.trim() === "";
       }
 
-      function makerCompactText(text) {
-        return String(text || "")
-          .trim()
-          .replace(/\s+/g, " ");
-      }
-
-      function makerGenerateClarifyingQuestions(promptText) {
-        const compactPrompt = makerCompactText(promptText);
-        const topicPreview = compactPrompt.length > 68 ? `${compactPrompt.slice(0, 67)}...` : compactPrompt;
-
-        return [
-          `Hva er hovedmålet med dette: "${topicPreview}"?`,
-          "Hvem er målgruppen, og hvilket resultat vil du at de skal sitte igjen med?",
-          "Hvilket format, tone og lengde vil du ha i sluttresultatet?"
-        ];
-      }
-
-      function makerQuestionsReply(questions) {
-        return [
-          "Kjempebra. Svar på disse 3 enkle spørsmålene, så lager jeg en superproff prompt:",
-          `1. ${questions[0]}`,
-          `2. ${questions[1]}`,
-          `3. ${questions[2]}`,
-          "",
-          "Skriv gjerne svaret ditt slik:",
-          "1) ...",
-          "2) ...",
-          "3) ..."
-        ].join("\n");
-      }
-
-      function makerExtractAnswers(answerText) {
-        const numberedAnswers = String(answerText || "")
-          .split(/\n+/)
-          .map((line) => makerCompactText(line))
-          .filter(Boolean)
-          .map((line) => line.replace(/^[1-3][).:\-]?\s*/, "").trim())
-          .filter(Boolean);
-
-        let answers = numberedAnswers;
-        if (answers.length === 0) {
-          answers = String(answerText || "")
-            .split(/\n|;/)
-            .map((part) => makerCompactText(part))
-            .filter(Boolean);
+      function makerSetBusy(isBusy) {
+        makerRequestInFlight = Boolean(isBusy);
+        const input = document.getElementById("makerInput");
+        if (input instanceof HTMLTextAreaElement) {
+          input.disabled = makerRequestInFlight;
         }
-
-        while (answers.length < 3) {
-          answers.push("Ikke spesifisert");
-        }
-
-        return answers.slice(0, 3);
+        makerUpdateSendButtonState();
       }
 
-      function makerBuildProfessionalPrompt({ originalRequest, questions, answerText }) {
-        const cleanRequest = makerCompactText(originalRequest);
-        const answers = makerExtractAnswers(answerText);
+      function makerApiMessages(messages) {
+        return messages
+          .filter((message) => message && (message.role === "user" || message.role === "assistant"))
+          .map((message) => ({
+            role: message.role,
+            text: String(message.text || "").trim()
+          }))
+          .filter((message) => message.text !== "")
+          .slice(-20);
+      }
 
-        return [
-          "Perfekt. Her er en superproff prompt basert på svarene dine:",
-          "",
-          "```",
-          "Du er en senior spesialist innen feltet under, og skal levere et resultat med høy kvalitet.",
-          "",
-          `Hovedoppgave: ${cleanRequest}`,
-          "",
-          "Kontekst og avklaringer:",
-          `- Avklaring 1 (${questions[0]}): ${answers[0]}`,
-          `- Avklaring 2 (${questions[1]}): ${answers[1]}`,
-          `- Avklaring 3 (${questions[2]}): ${answers[2]}`,
-          "",
-          "Instruksjoner:",
-          "- Bryt ned oppgaven i en kort og tydelig plan før du leverer selve resultatet.",
-          "- Prioriter konkret språk, målbar verdi, og tydelige anbefalinger.",
-          "- Bruk beste praksis, unngå fluff, og forklar valg kort når det gir verdi.",
-          "",
-          "Outputkrav:",
-          "- Lever svaret strukturert med overskrifter og punktlister der det passer.",
-          "- Tilpass språk, tone og detaljeringsgrad til målgruppen.",
-          "- Avslutt med 3 neste anbefalte steg.",
-          "",
-          "Kvalitetskontroll før levering:",
-          "- Er innholdet handlingsrettet, presist og uten gjentakelser?",
-          "- Er alle viktige antagelser eksplisitte?",
-          "- Er resultatet klart til bruk uten ekstra omskriving?",
-          "```"
-        ].join("\n");
+      async function makerFetchReply(messages) {
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 70000);
+
+        try {
+          const response = await fetch(MAKER_CHAT_ENDPOINT, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              messages: makerApiMessages(messages)
+            }),
+            signal: controller.signal
+          });
+
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            const message =
+              payload && typeof payload.error === "string" && payload.error.trim() !== ""
+                ? payload.error
+                : `Maker AI svarte ${response.status}`;
+            throw new Error(message);
+          }
+
+          const reply = payload && typeof payload.reply === "string" ? payload.reply.trim() : "";
+          if (!reply) {
+            throw new Error("Maker AI returnerte tomt svar");
+          }
+
+          return reply;
+        } catch (error) {
+          if (error && error.name === "AbortError") {
+            throw new Error("Maker AI brukte for lang tid på å svare");
+          }
+          throw error;
+        } finally {
+          window.clearTimeout(timeoutId);
+        }
       }
 
       function setupMakerApp() {
@@ -3443,11 +3414,11 @@
           makerUpdateSendButtonState();
         });
 
-        composer.addEventListener("submit", (event) => {
+        composer.addEventListener("submit", async (event) => {
           event.preventDefault();
 
           const promptText = input.value.trim();
-          if (!promptText) {
+          if (!promptText || makerRequestInFlight) {
             return;
           }
 
@@ -3466,42 +3437,35 @@
             }
           }
 
-          if (thread.awaitingPromptAnswers) {
-            const questions =
-              Array.isArray(thread.pendingPromptQuestions) && thread.pendingPromptQuestions.length === 3
-                ? thread.pendingPromptQuestions
-                : makerGenerateClarifyingQuestions(thread.pendingPromptRequest || promptText);
-
-            thread.messages.push({
-              role: "assistant",
-              text: makerBuildProfessionalPrompt({
-                originalRequest: thread.pendingPromptRequest || promptText,
-                questions,
-                answerText: promptText
-              })
-            });
-
-            thread.awaitingPromptAnswers = false;
-            thread.pendingPromptRequest = "";
-            thread.pendingPromptQuestions = [];
-          } else {
-            const questions = makerGenerateClarifyingQuestions(promptText);
-            thread.awaitingPromptAnswers = true;
-            thread.pendingPromptRequest = promptText;
-            thread.pendingPromptQuestions = questions;
-
-            thread.messages.push({
-              role: "assistant",
-              text: makerQuestionsReply(questions)
-            });
-          }
+          const requestMessages = thread.messages.slice();
+          const pendingMessage = {
+            role: "assistant",
+            text: "Tenker..."
+          };
+          thread.messages.push(pendingMessage);
 
           input.value = "";
           makerRenderThreadList();
           makerRenderMessages();
           makerAutoResizeInput();
-          makerUpdateSendButtonState();
-          input.focus();
+          makerSetBusy(true);
+
+          try {
+            const aiReply = await makerFetchReply(requestMessages);
+            pendingMessage.text = aiReply;
+          } catch (error) {
+            const message =
+              error && typeof error.message === "string" && error.message.trim() !== ""
+                ? error.message
+                : "Ukjent feil mot Maker AI";
+            pendingMessage.text = `Beklager, jeg fikk ikke svar fra Maker AI.\n\nFeil: ${message}`;
+          } finally {
+            makerSetBusy(false);
+            makerRenderThreadList();
+            makerRenderMessages();
+            makerAutoResizeInput();
+            input.focus();
+          }
         });
 
         makerAutoResizeInput();

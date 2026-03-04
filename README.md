@@ -46,6 +46,8 @@ Sett env var i Netlify:
 - `CSV_KEY=DIN_KEY` (eller din egen nøkkel)
 - `RESET_KEY=DIN_KEY` (eller egen nøkkel for reset)
 - `SCREEN_TIME_KEY=DIN_KEY` (egen nøkkel for skjermtid-import fra mobil)
+- `OPENAI_API_KEY=...` (kreves for Maker AI-chat)
+- `OPENAI_MAKER_MODEL=gpt-4.1` (valgfri, default er `gpt-4.1`)
 
 Bruk app i prod:
 
@@ -106,6 +108,17 @@ Google Sheets (egen fane `Notater`):
 - `pickups` er valgfri
 
 `GET /screen-time/today?date=YYYY-MM-DD` returnerer skjermtid for valgt dato.
+
+`POST /maker/chat`
+
+```json
+{
+  "messages": [
+    { "role": "user", "text": "Hjelp meg lage en lanseringsplan" },
+    { "role": "assistant", "text": "..." }
+  ]
+}
+```
 
 ## iPhone Shortcut (skjermtid til Oles-Brain)
 

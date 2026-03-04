@@ -57,6 +57,12 @@
   force = true
 
 [[redirects]]
+  from = "/maker/chat"
+  to = "/.netlify/functions/maker-chat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/bank/accounts"
   to = "/.netlify/functions/bank-accounts"
   status = 200
